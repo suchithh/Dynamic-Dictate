@@ -1,0 +1,21 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="ic-plus.svg">res/ic-plus.svg</file>
+    <file alias="ic-minus.svg">res/ic-remove.svg</file>
+
+    <file alias="ic-open.svg">res/ic-open.svg</file>
+    <file alias="ic-save.svg">res/ic-save.svg</file>
+
+    <file alias="ic-zoom-in.svg">res/ic-zoom-in.svg</file>
+    <file alias="ic-zoom-out.svg">res/ic-zoom-out.svg</file>
+    <file alias="ic-down.svg">res/ic-down.svg</file>
+    <file alias="ic-up.svg">res/ic-up.svg</file>
+
+    <file alias="ic-play.svg">res/ic-play.svg</file>
+    <file alias="ic-pause.svg">res/ic-pause.svg</file>
+    <file alias="ic-stop.svg">res/ic-stop.svg</file>
+
+    <file alias="ic-cam-on.svg">res/ic-cam-on.svg</file>
+    <file alias="ic-cam-off.svg">res/ic-cam-off.svg</file>
+</qresource>
+</RCC>

@@ -1,0 +1,71 @@
+QMainWindow {
+    background-color: #333333;
+    color: #ffffff;
+    font-family: Lato;
+}
+QMenuBar {
+    background-color: #333333; 
+    border: 1px solid black;
+    font-size: 28px;
+    spacing: 8px;
+    padding: 8px;
+}
+QMenuBar::item {
+    background-color: transparent;
+    color: #ffffff;
+}
+QMenuBar::item:selected {
+    background-color: #444444;
+}
+QMenuBar::item:pressed {
+    background-color: #555555;
+}
+QMenu {
+    background-color: #3f3f3f;
+    color: #f5f5f5;
+}
+QMenu::separator {
+    height: 1px;
+    background: #f5f5f5;
+    margin: 2px;
+}
+QMenu::item {
+    background-color: #3f3f3f;
+}
+QMenu::item:selected {
+    background-color: #444444;
+}
+QToolBar {
+    background: #252525;
+    spacing: 8px;
+    padding: 4px;
+    border: 0px solid black;
+}
+QToolBar::handle {
+    image: url(res/ic-drag.svg);
+}
+QToolBar::item:hover {
+    background-color: #444444;
+}
+QSpinBox {
+    background-color: #333333;
+    color: #f5f5f5;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 24px;
+    width: 120px;
+}
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: right;
+    border-image: url(res/ic-up-2.svg);
+    width: 32px;
+    height: 32px;
+}
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: left;
+    border-image: url(res/ic-down-2.svg);
+    width: 32px;
+    height: 32px;
+}
