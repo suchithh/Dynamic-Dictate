@@ -17,5 +17,7 @@
 
     <file alias="ic-cam-on.svg">res/ic-cam-on.svg</file>
     <file alias="ic-cam-off.svg">res/ic-cam-off.svg</file>
+
+    <file alias="ic-close.svg">res/ic-close.svg</file>
 </qresource>
 </RCC>
