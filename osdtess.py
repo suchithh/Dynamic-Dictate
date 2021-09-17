@@ -23,7 +23,7 @@ def detect_text(img_path):
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
     #print(pytesseract.image_to_string(img_thresholding(img_path)))
 
-    #Texblob Spelling Correction
+    #Texblob spelling correction and remove extraneous character
     return (TextBlob(pytesseract.image_to_string(img_thresholding(img_path))).correct()[:-2])
 
 if __name__=="__main__":
