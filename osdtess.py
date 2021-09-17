@@ -1,7 +1,10 @@
-from PIL import Image
+import platform
+
 import cv2
 import pytesseract
+from PIL import Image
 from textblob import TextBlob
+
 
 def img_thresholding(path):
     image = cv2.imread(path,0)
@@ -19,7 +22,15 @@ def img_thresholding(path):
     return(Image.fromarray(img))
 
 def detect_text(img_path):
-    tesseract_path = r'tesseract-ocr-win64\tesseract.exe'
+    if platform.system()=='Windows' and platform.machine().endswith('64'):
+        tesseract_path = r'tesseract-ocr-win64\tesseract.exe'
+    else:
+        try:
+            pytesseract.get_languages(config='')
+            tesseract_path = 'tesseract'
+        except:
+            tesseract_path = input("Enter the absolute path to the tesseract execuatable for your OS : ")
+            
     pytesseract.pytesseract.tesseract_cmd = tesseract_path
     #print(pytesseract.image_to_string(img_thresholding(img_path)))
 
