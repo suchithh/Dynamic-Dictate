@@ -130,3 +130,6 @@ dmypy.json
 
 #Temp images
 output.jpg
+
+#Recents log
+recents.txt
