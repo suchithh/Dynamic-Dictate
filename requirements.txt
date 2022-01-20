@@ -8,3 +8,8 @@ PyQtWebEngine
 pyqt5-plugins
 PyQt5-Qt5
 pyqt5-tools
+pygame
+keyboard
+gtts
+pdfplumber
+datetime
