@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize, QUrl
+from PyQt5.QtCore import QUrl
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
@@ -27,8 +27,8 @@ class MyWindow(Window) :
 
         # making window
         self.setGeometry(0, 0, win_width, win_height)
-        self.setMinimumHeight(600)
-        self.setMinimumWidth(1000)
+        self.setMinimumHeight(450)
+        self.setMinimumWidth(800)
         self.setWindowTitle("Dynamic Dictate")
         self.setStyleSheet(stylesheet)
         self.resized.connect(self.resize)
@@ -59,7 +59,9 @@ class MyWindow(Window) :
         # build the tab layout
         self.buildtab()
 
+        # capture of the camera
         self.cap = None
+        self.camon = True
 
         self.timer = QtCore.QTimer(self, interval=20)
         self.timer.timeout.connect(self.update_frame)
@@ -68,7 +70,7 @@ class MyWindow(Window) :
 
     @QtCore.pyqtSlot()
     def start_webcam(self):
-        if self.cap is None:
+        if (self.cap is None and self.camon) :
             self.cap = cv2.VideoCapture(0)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -111,7 +113,7 @@ class MyWindow(Window) :
         # menu bar
         self.menubar = self.menuBar()
         # fixed size (size does not change with window)
-        self.menubar.setFixedHeight(60)
+        self.menubar.setFixedHeight(40)
         toolbar = self.addToolBar("Controls")
 
         # menus
@@ -130,6 +132,7 @@ class MyWindow(Window) :
         stopAction.setShortcut("Ctrl+K")
         camAction = Widgets.QAction(self, text="Toggle Camera", icon=QIcon(":ic-cam-on.svg"))
         camAction.setShortcut("Ctrl+Alt+V")
+        camAction.triggered.connect(self.toggleCam)
         closeAction = Widgets.QAction(self, text="Close Tab", icon=QIcon(":ic-close.svg"))
         closeAction.setShortcut("Ctrl+W")
         closeAction.triggered.connect(self.closetab)
@@ -151,6 +154,9 @@ class MyWindow(Window) :
         # toolbar
         toolbar.addActions([openAction, saveAction, closeAction, playAction, stopAction, camAction])
 
+    def toggleCam(self) :
+        self.camon = not self.camon
+
     #recent menu opened here
     def makeRecentMenu(self) :
         self.openRMenu.clear()
@@ -168,7 +174,7 @@ class MyWindow(Window) :
     # add tab bar to frame
     def buildtab(self) :
         self.tabs = Widgets.QTabWidget(self.frame)
-        self.tabs.setStyleSheet(stylesheet)
+        # self.tabs.setStyleSheet(stylesheet)
         self.tabs.setMovable(True)
 
         self.labelNone = Widgets.QLabel('No tabs open')
@@ -246,7 +252,7 @@ class MyWindow(Window) :
 app = App(sys.argv)
 
 #initializing custom window with random dimensions (can be changed)
-win = MyWindow(1600, 1200)
+win = MyWindow(1600, 900)
 win.show()
 
 # exits program when close button is pressed
