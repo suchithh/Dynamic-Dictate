@@ -5,6 +5,7 @@ from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
 import sys, os, qrc_res, zipfile, cv2
+import text_detect, platform
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
@@ -80,6 +81,7 @@ class MyWindow(Window) :
     def update_frame(self):
         ret, image = self.cap.read()
         simage = cv2.flip(image, 1)
+        print (text_detect.detect_text(simage))
         self.displayImage(image, True)
 
     def displayImage(self, img, window=True):
@@ -247,6 +249,13 @@ class MyWindow(Window) :
         self.tabs.removeTab(self.tabs.currentIndex())
         if (self.tabs.count() == 0) :
             self.tabs.addTab(self.labelNone, "Home")
+
+
+#Check system platform
+if platform.system()=='Windows' and platform.machine().endswith('64'):
+    text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
+else:
+    text_detect.set_tess_path("tesseract")
 
 # initializing app with system arguments
 app = App(sys.argv)
