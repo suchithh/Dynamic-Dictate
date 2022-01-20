@@ -6,6 +6,8 @@ import os
 import keyboard
 pages=1
 n=5
+repeat=False
+slow=False
 def getpages():
     with pdfplumber.open(r'Harry Potter and The Sorcerer’s Stone.pdf') as pdf:
         global pages
@@ -42,12 +44,21 @@ def textparse(text):
                 index=0
             index+=1
     return readlist
-def check_if_writing(checktext):
-    return not keyboard.is_pressed('space')
+def check_if_writing(checktext):    
+    global repeat    
+    if keyboard.is_pressed('space') or keyboard.is_pressed('right'):
+        repeat=False
+        return False
+    elif keyboard.is_pressed('left'):
+        repeat=True
+        return False
+    else:
+        return True
+
 def narrate(current_index,readlist):
     date_string = datetime.now().strftime("%d%m%Y%H%M%S")
     filename = "voice"+date_string+".mp3"
-    speech = gTTS(text = readlist[current_index], lang='en', tld='com', slow=True)
+    speech = gTTS(text = readlist[current_index], lang='en', tld='us', slow=slow)
     with open (filename,'wb') as file:
         speech.write_to_fp(file)
     mixer.init()
@@ -61,8 +72,14 @@ def narrate(current_index,readlist):
 getpages()
 for page in range(pages):
     readlist=textparse(pdfparse(page))
-    for index in range(len(readlist)):
-        narrate(index,readlist)
+    index=0
+    while True:
+        if repeat:
+            index-=1
+            narrate(index,readlist)
+        else:
+            narrate(index,readlist)
         writing=True
         while writing:
             writing=check_if_writing(readlist[index])
+        index+=1
