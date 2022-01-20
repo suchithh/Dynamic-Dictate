@@ -1,11 +1,10 @@
-from PyQt5 import QtWidgets as Widgets
-from PyQt5 import QtCore
+from PyQt5 import QtWidgets as Widgets, QtCore, QtGui
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize, QUrl
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
-import sys, os, qrc_res, zipfile
+import sys, os, qrc_res, zipfile, cv2
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
@@ -53,8 +52,45 @@ class MyWindow(Window) :
         self.frame = Widgets.QFrame(self)
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
 
+        # text label for webcam image
+        self.image_label = Widgets.QLabel(self)
+        self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
+
         # build the tab layout
         self.buildtab()
+
+        self.cap = None
+
+        self.timer = QtCore.QTimer(self, interval=20)
+        self.timer.timeout.connect(self.update_frame)
+        self._image_counter = 0
+        self.start_webcam()
+
+    @QtCore.pyqtSlot()
+    def start_webcam(self):
+        if self.cap is None:
+            self.cap = cv2.VideoCapture(0)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.timer.start()
+
+    @QtCore.pyqtSlot()
+    def update_frame(self):
+        ret, image = self.cap.read()
+        simage = cv2.flip(image, 1)
+        self.displayImage(image, True)
+
+    def displayImage(self, img, window=True):
+        qformat = QtGui.QImage.Format_Indexed8
+        if len(img.shape)==3 :
+            if img.shape[2]==4:
+                qformat = QtGui.QImage.Format_RGBA8888
+            else:
+                qformat = QtGui.QImage.Format_RGB888
+        outImage = QtGui.QImage(img, img.shape[1], img.shape[0], img.strides[0], qformat)
+        outImage = outImage.rgbSwapped()
+        if window:
+            self.image_label.setPixmap(QtGui.QPixmap.fromImage(outImage))
 
     def read(self) :
         # read recent files from text file
@@ -146,6 +182,7 @@ class MyWindow(Window) :
     def resize(self) :
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.tabs.setGeometry(0, 0, int(0.8*self.width()), int(0.9*self.height()))
+        self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
 
     # open action triggered
     def opentab(self) :
