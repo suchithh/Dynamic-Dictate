@@ -1,11 +1,11 @@
-from PyQt5 import QtWidgets as Widgets
-from PyQt5 import QtCore
+from PyQt5 import QtWidgets as Widgets, QtCore, QtGui
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize, QUrl
+from PyQt5.QtCore import QUrl
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
-import sys, os, qrc_res, zipfile
+import sys, os, qrc_res, zipfile, cv2
+import text_detect, platform
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
@@ -28,8 +28,8 @@ class MyWindow(Window) :
 
         # making window
         self.setGeometry(0, 0, win_width, win_height)
-        self.setMinimumHeight(600)
-        self.setMinimumWidth(1000)
+        self.setMinimumHeight(450)
+        self.setMinimumWidth(800)
         self.setWindowTitle("Dynamic Dictate")
         self.setStyleSheet(stylesheet)
         self.resized.connect(self.resize)
@@ -53,8 +53,47 @@ class MyWindow(Window) :
         self.frame = Widgets.QFrame(self)
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
 
+        # text label for webcam image
+        self.image_label = Widgets.QLabel(self)
+        self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
+
         # build the tab layout
         self.buildtab()
+
+        # capture of the camera
+        self.cap = None
+        self.camon = True
+
+        self.timer = QtCore.QTimer(self, interval=20)
+        self.timer.timeout.connect(self.update_frame)
+        self._image_counter = 0
+        self.start_webcam()
+
+    @QtCore.pyqtSlot()
+    def start_webcam(self):
+        if (self.cap is None and self.camon) :
+            self.cap = cv2.VideoCapture(0)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.timer.start()
+
+    @QtCore.pyqtSlot()
+    def update_frame(self):
+        ret, image = self.cap.read()
+        # print (text_detect.detect_text(image))
+        self.displayImage(image, True)
+
+    def displayImage(self, img, window=True):
+        qformat = QtGui.QImage.Format_Indexed8
+        if len(img.shape)==3 :
+            if img.shape[2]==4:
+                qformat = QtGui.QImage.Format_RGBA8888
+            else:
+                qformat = QtGui.QImage.Format_RGB888
+        outImage = QtGui.QImage(img, img.shape[1], img.shape[0], img.strides[0], qformat)
+        outImage = outImage.rgbSwapped()
+        if window:
+            self.image_label.setPixmap(QtGui.QPixmap.fromImage(outImage))
 
     def read(self) :
         # read recent files from text file
@@ -75,7 +114,7 @@ class MyWindow(Window) :
         # menu bar
         self.menubar = self.menuBar()
         # fixed size (size does not change with window)
-        self.menubar.setFixedHeight(60)
+        self.menubar.setFixedHeight(40)
         toolbar = self.addToolBar("Controls")
 
         # menus
@@ -94,6 +133,7 @@ class MyWindow(Window) :
         stopAction.setShortcut("Ctrl+K")
         camAction = Widgets.QAction(self, text="Toggle Camera", icon=QIcon(":ic-cam-on.svg"))
         camAction.setShortcut("Ctrl+Alt+V")
+        camAction.triggered.connect(self.toggleCam)
         closeAction = Widgets.QAction(self, text="Close Tab", icon=QIcon(":ic-close.svg"))
         closeAction.setShortcut("Ctrl+W")
         closeAction.triggered.connect(self.closetab)
@@ -115,6 +155,9 @@ class MyWindow(Window) :
         # toolbar
         toolbar.addActions([openAction, saveAction, closeAction, playAction, stopAction, camAction])
 
+    def toggleCam(self) :
+        self.camon = not self.camon
+
     #recent menu opened here
     def makeRecentMenu(self) :
         self.openRMenu.clear()
@@ -132,7 +175,7 @@ class MyWindow(Window) :
     # add tab bar to frame
     def buildtab(self) :
         self.tabs = Widgets.QTabWidget(self.frame)
-        self.tabs.setStyleSheet(stylesheet)
+        # self.tabs.setStyleSheet(stylesheet)
         self.tabs.setMovable(True)
 
         self.labelNone = Widgets.QLabel('No tabs open')
@@ -146,6 +189,7 @@ class MyWindow(Window) :
     def resize(self) :
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.tabs.setGeometry(0, 0, int(0.8*self.width()), int(0.9*self.height()))
+        self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
 
     # open action triggered
     def opentab(self) :
@@ -205,11 +249,18 @@ class MyWindow(Window) :
         if (self.tabs.count() == 0) :
             self.tabs.addTab(self.labelNone, "Home")
 
+
+#Check system platform
+if platform.system()=='Windows' and platform.machine().endswith('64'):
+    text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
+else:
+    text_detect.set_tess_path("tesseract")
+
 # initializing app with system arguments
 app = App(sys.argv)
 
 #initializing custom window with random dimensions (can be changed)
-win = MyWindow(1600, 1200)
+win = MyWindow(1600, 900)
 win.show()
 
 # exits program when close button is pressed
