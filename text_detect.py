@@ -5,17 +5,22 @@ from PIL import Image
 from textblob import TextBlob
 import time
 
-def img_thresholding(path):
-    image = cv2.imread(path,0)
+def img_thresholding(image):
     img = image.copy()
 
-    blur = cv2.GaussianBlur(img,(5,5),0)
-    dump, img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    #Adaptive Thresholding
+    img = cv2.adaptiveThreshold(img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
+    
+    # Otsu Thresholding
+    # blur = cv2.GaussianBlur(img,(5,5),0)
+    # dump, img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     #Convert to RGB for tesseract
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    cv2.imwrite('output.jpg', img)
+    #Write output to file
+    # cv2.imwrite('output.jpg', img)
+
     return(Image.fromarray(img))
 
 def detect_text(img_path):

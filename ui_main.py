@@ -80,8 +80,7 @@ class MyWindow(Window) :
     @QtCore.pyqtSlot()
     def update_frame(self):
         ret, image = self.cap.read()
-        simage = cv2.flip(image, 1)
-        print (text_detect.detect_text(simage))
+        # print (text_detect.detect_text(image))
         self.displayImage(image, True)
 
     def displayImage(self, img, window=True):
