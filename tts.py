@@ -4,6 +4,7 @@ from pygame import mixer, time
 from datetime import datetime
 import os
 import keyboard
+from difflib import SequenceMatcher
 pages=1
 n=5
 repeat=False
@@ -52,8 +53,15 @@ def check_if_writing(checktext):
     elif keyboard.is_pressed('left'):
         repeat=True
         return False
-    else:
-        return True
+    elif image_check(checktext)>0.2:
+        repeat=False
+        return False    
+    return True
+
+def image_check(checktext):
+    temp=''
+    return SequenceMatcher(None, checktext, temp).ratio()
+
 
 def narrate(current_index,readlist):
     date_string = datetime.now().strftime("%d%m%Y%H%M%S")
