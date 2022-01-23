@@ -67,7 +67,7 @@ class MyWindow(Window) :
         self.start_webcam()
 
     @QtCore.pyqtSlot()
-    def start_webcam(self):
+    def start_webcam(self) :
         if (self.cap is None and self.camon) :
             self.cap = cv2.VideoCapture(0)
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -75,10 +75,15 @@ class MyWindow(Window) :
         self.timer.start()
 
     @QtCore.pyqtSlot()
+    def stop_webcam(self) :
+        if (self.cap is not None and  not self.camon) :
+            self.cap = None
+
+    @QtCore.pyqtSlot()
     def update_frame(self) :
-        ret, image = self.cap.read()
-        # print (text_detect.detect_text(image))
-        self.displayImage(image, True)
+        if self.camon :
+            ret, image = self.cap.read()
+            self.displayImage(image, True)
 
     def displayImage(self, img, window=True) :
         qformat = QtGui.QImage.Format_Indexed8
@@ -145,6 +150,10 @@ class MyWindow(Window) :
 
     def toggleCam(self) :
         self.camon = not self.camon
+        if self.camon :
+            self.start_webcam()
+        else :
+            self.stop_webcam()
 
     #recent menu opened here
     def makeRecentMenu(self) :
