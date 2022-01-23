@@ -84,16 +84,22 @@ class MyWindow(Window) :
         if self.camon :
             ret, image = self.cap.read()
             self.displayImage(image, True)
+        else :
+            self.displayImage(None, True)
 
     def displayImage(self, img, window=True) :
-        qformat = QtGui.QImage.Format_Indexed8
-        if len(img.shape) == 3 :
-            if img.shape[2] == 4 :
-                qformat = QtGui.QImage.Format_RGBA8888
-            else :
-                qformat = QtGui.QImage.Format_RGB888
-        outImage = QtGui.QImage(img, img.shape[1], img.shape[0], img.strides[0], qformat)
-        outImage = outImage.rgbSwapped()
+        outImage = None
+        if self.camon :
+            qformat = QtGui.QImage.Format_Indexed8
+            if len(img.shape) == 3 :
+                if img.shape[2] == 4 :
+                    qformat = QtGui.QImage.Format_RGBA8888
+                else :
+                    qformat = QtGui.QImage.Format_RGB888
+            outImage = QtGui.QImage(img, img.shape[1], img.shape[0], img.strides[0], qformat)
+            outImage = outImage.rgbSwapped()
+        else :
+            outImage = QtGui.QImage('res/white.png')
         if window :
             self.image_label.setPixmap(QtGui.QPixmap.fromImage(outImage))
 
