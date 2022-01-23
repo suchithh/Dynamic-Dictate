@@ -13,3 +13,4 @@ keyboard
 gtts
 pdfplumber
 datetime
+autocorrect
