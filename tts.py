@@ -82,11 +82,11 @@ def voicecheck():
                 text = MyText.lower()  
                 print(text)
                 if text != None:
-                    if any(text in x for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
+                    if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
                         repeat=False
                         writing= False
                         break
-                    elif any(text in x for x in ['previous', 'back', 'no']):
+                    elif any(x in text for x in ['previous', 'back', 'no']):
                         repeat=True
                         writing= False
                         break
