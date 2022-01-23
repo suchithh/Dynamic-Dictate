@@ -16,12 +16,12 @@ r = sr.Recognizer()
 with sr.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 def getpages():
-    with pdfplumber.open(r'Harry Potter and The Sorcerer’s Stone.pdf') as pdf:
+    with pdfplumber.open(r'Harry_Potter_and_The_Sorcerers_Stone.pdf') as pdf:
         global pages 
         pages=len(pdf.pages) #procures number of pages
 def pdfparse(pageno): 
     text=""
-    with pdfplumber.open(r'Harry Potter and The Sorcerer’s Stone.pdf') as pdf:
+    with pdfplumber.open(r'Harry_Potter_and_The_Sorcerers_Stone.pdf') as pdf:
         data = pdf.pages[pageno]
         text+=data.extract_text()+" " #parses a page in the pdf as a string
     return text
@@ -82,11 +82,11 @@ def voicecheck():
                 text = MyText.lower()  
                 print(text)
                 if text != None:
-                    if 'next' in text or 'continue' in text or 'yes' in text or 'yeah' in text or 'yah' in text:
+                    if any(text in x for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
                         repeat=False
                         writing= False
                         break
-                    elif 'previous' in text or 'back' in text or 'no' in text:
+                    elif any(text in x for x in ['previous', 'back', 'no']):
                         repeat=True
                         writing= False
                         break
