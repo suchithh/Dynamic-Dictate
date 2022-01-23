@@ -14,3 +14,4 @@ gtts
 pdfplumber
 datetime
 autocorrect
+speechrecognition

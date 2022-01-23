@@ -5,10 +5,16 @@ from datetime import datetime
 import os
 import keyboard
 from difflib import SequenceMatcher
+import speech_recognition as sr
+import threading
 pages=1 
 n=5 #setting for number of words to be read at once at max
 repeat=False 
 slow=False #setting for slow/normal speed reading
+writing=False
+r = sr.Recognizer()
+with sr.Microphone() as source2:
+    r.adjust_for_ambient_noise(source2, duration=0.2)
 def getpages():
     with pdfplumber.open(r'Harry Potter and The Sorcerer’s Stone.pdf') as pdf:
         global pages 
@@ -45,19 +51,53 @@ def textparse(text):
                 index=0
             index+=1
     return readlist
-def check_if_writing(checktext): #checks for user input/ when user is done writing   
+def keypress():
+    global writing
     global repeat    
     if keyboard.is_pressed('space') or keyboard.is_pressed('right'):
         repeat=False
-        return False
+        writing=False
+        return None
     elif keyboard.is_pressed('left'):
         repeat=True
-        return False
-    elif image_check(checktext)>0.2:
-        repeat=False
-        return False    
-    return True
+        writing=False
+        return None
 
+def imagechecker(checktext):
+    global writing
+    if image_check(checktext)>0.2:
+        writing=False
+        repeat=False
+        return None
+
+def voicecheck():
+    print('started')
+    global writing
+    global repeat
+    while writing:
+        try:
+            with sr.Microphone() as source2:                        
+                audio2 = r.listen(source2)
+                MyText = r.recognize_google(audio2)
+                text = MyText.lower()  
+                print(text)
+                if text != None:
+                    if 'next' in text or 'continue' in text or 'yes' in text or 'yeah' in text or 'yah' in text:
+                        repeat=False
+                        writing= False
+                        break
+                    elif 'previous' in text or 'back' in text or 'no' in text:
+                        repeat=True
+                        writing= False
+                        break
+        except sr.RequestError as e:
+            print('error')
+            pass                    
+        except sr.UnknownValueError:
+            print('error')
+            pass
+    else:
+        print('stopped')
 def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
     temp=''
     return SequenceMatcher(None, checktext, temp).ratio()
@@ -89,6 +129,8 @@ for page in range(pages):
         else:
             narrate(index,readlist)
         writing=True
+        c=threading.Thread(target=voicecheck).start()
         while writing:
-            writing=check_if_writing(readlist[index])
+            a=threading.Thread(target=keypress).start()           
+            b=threading.Thread(target=image_check(readlist[index])).start()
         index+=1
