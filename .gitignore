@@ -19,7 +19,6 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
@@ -136,11 +135,11 @@ output.jpg
 #Recents file
 recents.txt
 
-#Misc. PDF
-Harry Potter and The Sorcerer’s Stone.pdf
-
 #Test Images
 testimg/
 
 #VSCode misc
 .VSCode/
+
+#Misc. PDF
+*.pdf 
