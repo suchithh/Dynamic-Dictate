@@ -15,4 +15,7 @@ pdfplumber
 datetime
 autocorrect
 speechrecognition
-.\wheels\PyAudio-0.2.11-cp38-cp38-win_amd64.whl
+Pyaudio; python_version<='3.7'
+.\wheels\PyAudio-0.2.11-cp38-cp38-win_amd64.whl; python_version=='3.8'
+.\wheels\PyAudio-0.2.11-cp39-cp39-win_amd64.whl; python_version=='3.9'
+.\wheels\PyAudio-0.2.11-cp310-cp310-win_amd64.whl; python_version=='3.10'
