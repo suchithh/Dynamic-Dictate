@@ -16,12 +16,12 @@ r = sr.Recognizer()
 with sr.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 def getpages():
-    with pdfplumber.open(r"E:\MATH PRACTICAL NOTES TO BE WRITTEN IN RECORD CLASS 12.pdf") as pdf:
+    with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
         global pages 
         pages=len(pdf.pages) #procures number of pages
 def pdfparse(pageno): 
     text=""
-    with pdfplumber.open(r"E:\MATH PRACTICAL NOTES TO BE WRITTEN IN RECORD CLASS 12.pdf") as pdf:
+    with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
         data = pdf.pages[pageno]
         text+=data.extract_text()+" " #parses a page in the pdf as a string
     return text
