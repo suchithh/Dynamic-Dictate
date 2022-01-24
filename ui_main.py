@@ -70,8 +70,6 @@ class MyWindow(Window) :
     def start_webcam(self) :
         if (self.cap is None and self.camon) :
             self.cap = cv2.VideoCapture(0)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         self.timer.start()
 
     @QtCore.pyqtSlot()
@@ -81,9 +79,11 @@ class MyWindow(Window) :
 
     @QtCore.pyqtSlot()
     def update_frame(self) :
-        if self.camon :
+        if self.camon and self.cap.isOpened() :
             ret, image = self.cap.read()
-            self.displayImage(image, True)
+            if image is not None :
+                cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                self.displayImage(image, True)
         else :
             self.displayImage(None, True)
 
