@@ -54,11 +54,11 @@ def textparse(text):
 def keypress():
     global writing
     global repeat    
-    if keyboard.is_pressed('space') or keyboard.is_pressed('right'):
+    if keyboard.is_pressed('space') or keyboard.is_pressed('d'):
         repeat=False
         writing=False
         return None
-    elif keyboard.is_pressed('left'):
+    elif keyboard.is_pressed('a'):
         repeat=True
         writing=False
         return None
