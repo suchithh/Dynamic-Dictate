@@ -96,8 +96,7 @@ def voicecheck():
         except sr.UnknownValueError:
             print('error')
             pass
-    else:
-        print('stopped')
+
 def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
     temp=''
     return SequenceMatcher(None, checktext, temp).ratio()
