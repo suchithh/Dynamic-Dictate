@@ -4,8 +4,7 @@ from PyQt5.QtCore import QUrl
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
-import sys, os, qrc_res, zipfile, cv2
-import text_detect, platform
+import sys, os, qrc_res, zipfile, cv2, text_detect, platform
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
@@ -61,7 +60,7 @@ class MyWindow(Window) :
         self.cap = None
         self.camon = True
 
-        self.timer = QtCore.QTimer(self, interval=20)
+        self.timer = QtCore.QTimer(self, interval=500)
         self.timer.timeout.connect(self.update_frame)
         self._image_counter = 0
         self.start_webcam()
@@ -80,8 +79,9 @@ class MyWindow(Window) :
     @QtCore.pyqtSlot()
     def update_frame(self) :
         if self.camon and self.cap.isOpened() :
-            ret, image = self.cap.read()
+            _, image = self.cap.read()
             if image is not None :
+                print(text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)))
                 cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 self.displayImage(image, True)
         else :
@@ -237,7 +237,7 @@ else :
 app = App(sys.argv)
 
 #initializing custom window with random dimensions (can be changed)
-win = MyWindow(1600, 900)
+win = MyWindow(2560, 1600)
 win.show()
 
 # exits program when close button is pressed
