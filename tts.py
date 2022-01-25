@@ -28,11 +28,13 @@ with speech.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 
 def getpages(path):
+    delete_cache()
     with pdfplumber.open(path) as pdf:
         global pages 
-        pages=len(pdf.pages) #procures number of pages
+        pages=len(pdf.pages)
+        return pages #procures number of pages
 
-def pdfparse(pageno): 
+def pdfparse(pageno, path): 
     text=""
     with pdfplumber.open(path) as pdf:
         data = pdf.pages[pageno]
@@ -133,28 +135,23 @@ def narrate(current_index,readlist):
     os.remove(filename) #deletes temp file
 
 
-def pagereader(path):
-    delete_cache()
-    getpages(path)
-    for page in range(pages):
-        readlist=textparse(pdfparse(page))
-        readpage(index=0, readlist=readlist)
-
-def readpage(index, readlist):
+def pagereader(path, page=0, index=0):
+    readlist=textparse(pdfparse(page, path))
     global writing
-    while True:
-        if index>=len(readlist):
-            break
-        if repeat:
-            index-=1
-            narrate(index,readlist)
-        else:
-            narrate(index,readlist)
-        writing=True
-        c=threading.Thread(target=voicecheck).start()
-        while writing:
-            a=threading.Thread(target=keypress).start()           
-            b=threading.Thread(target=image_check(readlist[index])).start()
-        index+=1
+    if index>=len(readlist):
+        page+=1
+        index=-1
+    if repeat:
+        index-=1
+        narrate(index,readlist)
+    else:
+        narrate(index,readlist)
+    writing=True
+    c=threading.Thread(target=voicecheck).start()
+    while writing:
+        a=threading.Thread(target=keypress).start()           
+        b=threading.Thread(target=image_check(readlist[index])).start()
+    index+=1
+    return page, index
 
 pagereader(path)
