@@ -12,18 +12,21 @@ n=5 #setting for number of words to be read at once at max
 repeat=False 
 slow=False #setting for slow/normal speed reading
 writing=False
+path="Harry_Potter_and_The_Sorcerers_Stone.pdf" #give path here
 r = speech.Recognizer()
+tld=['us','co.uk','co.in'] #accent setting
+
 with speech.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 
 def getpages():
-    with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
+    with pdfplumber.open(path) as pdf:
         global pages 
         pages=len(pdf.pages) #procures number of pages
 
 def pdfparse(pageno): 
     text=""
-    with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
+    with pdfplumber.open(path) as pdf:
         data = pdf.pages[pageno]
         text+=data.extract_text()+" " #parses a page in the pdf as a string
     return text
@@ -69,6 +72,7 @@ def keypress():
 
 def imagechecker(checktext):
     global writing
+    global repeat
     if image_check(checktext)>0.2:
         writing=False
         repeat=False
@@ -109,7 +113,7 @@ def image_check(checktext): #compares text to ocr to determine wheter the user h
 def narrate(current_index,readlist):
     date_string = datetime.now().strftime("%d%m%Y%H%M%S") #generates an mp3 file with a unique name
     filename = "voice"+date_string+".mp3"
-    speech = gTTS(text = readlist[current_index], lang='en', tld='us', slow=slow) #initiates gtts with en-us could give user option to choose
+    speech = gTTS(text = readlist[current_index], lang='en', tld=tld[2], slow=slow) #initiates gtts with en-us could give user option to choose
     with open (filename,'wb') as file:
         speech.write_to_fp(file)
     mixer.init()
@@ -119,6 +123,8 @@ def narrate(current_index,readlist):
         time.Clock().tick(10)
     mixer.quit()
     os.remove(filename) #deletes temp file
+
+
 
 getpages()
 #driver code
