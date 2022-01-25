@@ -7,6 +7,8 @@ import keyboard
 from difflib import SequenceMatcher
 import speech_recognition as speech
 import threading
+
+
 pages=1 
 n=5 #setting for number of words to be read at once at max
 repeat=False 
@@ -19,7 +21,7 @@ tld=['us','co.uk','co.in'] #accent setting
 with speech.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 
-def getpages():
+def getpages(path):
     with pdfplumber.open(path) as pdf:
         global pages 
         pages=len(pdf.pages) #procures number of pages
@@ -125,12 +127,14 @@ def narrate(current_index,readlist):
     os.remove(filename) #deletes temp file
 
 
+def pagereader(path):
+    getpages(path)
+    for page in range(pages):
+        readlist=textparse(pdfparse(page))
+        readpage(index=0, readlist=readlist)
 
-getpages()
-#driver code
-for page in range(pages):
-    readlist=textparse(pdfparse(page))
-    index=0
+def readpage(index, readlist):
+    global writing
     while True:
         if index>=len(readlist):
             break
@@ -145,3 +149,5 @@ for page in range(pages):
             a=threading.Thread(target=keypress).start()           
             b=threading.Thread(target=image_check(readlist[index])).start()
         index+=1
+
+pagereader(path)
