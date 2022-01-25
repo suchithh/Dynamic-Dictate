@@ -3,6 +3,7 @@ import pdfplumber
 from pygame import mixer, time
 from datetime import datetime
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import keyboard
 from difflib import SequenceMatcher
 import speech_recognition as speech
