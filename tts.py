@@ -18,6 +18,11 @@ path="Harry_Potter_and_The_Sorcerers_Stone.pdf" #give path here
 r = speech.Recognizer()
 tld=['us','co.uk','co.in'] #accent setting
 
+def delete_cache():
+    for file in os.listdir():
+        if '.mp3' in file:
+            os.remove(file)
+
 with speech.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
 
@@ -128,6 +133,7 @@ def narrate(current_index,readlist):
 
 
 def pagereader(path):
+    delete_cache()
     getpages(path)
     for page in range(pages):
         readlist=textparse(pdfparse(page))
