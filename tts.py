@@ -5,26 +5,29 @@ from datetime import datetime
 import os
 import keyboard
 from difflib import SequenceMatcher
-import speech_recognition as sr
+import speech_recognition as speech
 import threading
 pages=1 
 n=5 #setting for number of words to be read at once at max
 repeat=False 
 slow=False #setting for slow/normal speed reading
 writing=False
-r = sr.Recognizer()
-with sr.Microphone() as source2:
+r = speech.Recognizer()
+with speech.Microphone() as source2:
     r.adjust_for_ambient_noise(source2, duration=0.2)
+
 def getpages():
     with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
         global pages 
         pages=len(pdf.pages) #procures number of pages
+
 def pdfparse(pageno): 
     text=""
     with pdfplumber.open(r"Harry_Potter_and_The_Sorcerers_Stone.pdf") as pdf:
         data = pdf.pages[pageno]
         text+=data.extract_text()+" " #parses a page in the pdf as a string
     return text
+
 def textparse(text):
     words=text.split(" ")
     readlist=[]
@@ -51,6 +54,7 @@ def textparse(text):
                 index=0
             index+=1
     return readlist
+
 def keypress():
     global writing
     global repeat    
@@ -76,7 +80,7 @@ def voicecheck():
     global repeat
     while writing:
         try:
-            with sr.Microphone() as source2:                        
+            with speech.Microphone() as source2:                        
                 audio2 = r.listen(source2)
                 MyText = r.recognize_google(audio2)
                 text = MyText.lower()  
@@ -90,10 +94,10 @@ def voicecheck():
                         repeat=True
                         writing= False
                         break
-        except sr.RequestError as e:
+        except speech.RequestError as e:
             print('error')
             pass                    
-        except sr.UnknownValueError:
+        except speech.UnknownValueError:
             print('error')
             pass
 
