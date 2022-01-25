@@ -30,7 +30,6 @@ with speech.Microphone() as source2:
 def getpages(path):
     delete_cache()
     with pdfplumber.open(path) as pdf:
-        global pages 
         pages=len(pdf.pages)
         return pages #procures number of pages
 
@@ -68,31 +67,24 @@ def textparse(text):
             index+=1
     return readlist
 
-def keypress():
-    global writing
-    global repeat    
+def keypress(path, pages, page, index, writing):  
     if keyboard.is_pressed('space') or keyboard.is_pressed('d'):
-        repeat=False
+        index+=1
         writing=False
-        return None
+        pagereader(path, pages, page, index, writing)
     elif keyboard.is_pressed('a'):
-        repeat=True
         writing=False
-        return None
+        pagereader(path, pages, page, index, writing)
 
-def imagechecker(checktext):
-    global writing
-    global repeat
-    if image_check(checktext)>0.2:
-        writing=False
-        repeat=False
-        return None
+# def imagechecker(checktext, path, pages, page, index, writing):
+#     if image_check(checktext)>0.2:
+#         writing=False
+#         repeat=False
+#         pagereader(path, pages, page, index, writing, repeat)
 
-def voicecheck():
+def voicecheck(path, pages, page, index, writing):
     print('started')
-    global writing
-    global repeat
-    while writing:
+    while True:
         try:
             with speech.Microphone() as source2:                        
                 audio2 = r.listen(source2)
@@ -101,13 +93,12 @@ def voicecheck():
                 print(text)
                 if text != None:
                     if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
-                        repeat=False
+                        index+=1
                         writing= False
-                        break
+                        pagereader(path, pages, page, index, writing)
                     elif any(x in text for x in ['previous', 'back', 'no']):
-                        repeat=True
                         writing= False
-                        break
+                        pagereader(path, pages, page, index, writing)
         except speech.RequestError as e:
             print('error')
             pass                    
@@ -115,10 +106,9 @@ def voicecheck():
             print('error')
             pass
 
-def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
-    temp=''
-    return SequenceMatcher(None, checktext, temp).ratio()
-
+# def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
+#     temp=''
+#     return SequenceMatcher(None, checktext, temp).ratio()
 
 def narrate(current_index,readlist):
     date_string = datetime.now().strftime("%d%m%Y%H%M%S") #generates an mp3 file with a unique name
@@ -135,24 +125,19 @@ def narrate(current_index,readlist):
     os.remove(filename) #deletes temp file
 
 
-def pagereader(path, pages, page=0, index=0):
+def pagereader(path, pages, page=0, index=0, writing=True):
     if page>=pages:
-        return None
+        return None, None
     readlist=textparse(pdfparse(page, path))
-    global writing
     if index>=len(readlist):
         page+=1
-        index=-1
-    if repeat:
-        index-=1
-        narrate(index,readlist)
-    else:
-        narrate(index,readlist)
-    writing=True
-    c=threading.Thread(target=voicecheck).start()
-    while writing:
-        a=threading.Thread(target=keypress).start()           
-        b=threading.Thread(target=image_check(readlist[index])).start()
-    index+=1
-    return page, index
+        index=0
+    narrate(index,readlist)
+    return page, index, readlist, writing, repeat
 
+pages=getpages(path)
+page=0
+index=0
+page, index, readlist, writing, repeat=pagereader(path, pages, page, index, writing)
+c=threading.Thread(target=voicecheck(path, pages, page, index, writing)).start()      
+b=threading.Thread(target=keypress(path, pages, page, index, writing, repeat)).start()                  
