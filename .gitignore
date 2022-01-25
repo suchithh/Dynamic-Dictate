@@ -143,3 +143,5 @@ testimg/
 
 #Misc. PDF
 *.pdf 
+output.jpg
+recents.txt
