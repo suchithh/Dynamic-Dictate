@@ -135,7 +135,9 @@ def narrate(current_index,readlist):
     os.remove(filename) #deletes temp file
 
 
-def pagereader(path, page=0, index=0):
+def pagereader(path, pages, page=0, index=0):
+    if page>=pages:
+        return None
     readlist=textparse(pdfparse(page, path))
     global writing
     if index>=len(readlist):
@@ -154,4 +156,3 @@ def pagereader(path, page=0, index=0):
     index+=1
     return page, index
 
-pagereader(path)
