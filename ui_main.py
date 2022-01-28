@@ -255,16 +255,20 @@ class MyWindow(Window) :
         self.is_file_open=True
         self.file=self.rfiles[index]
 
-    def start_narrate(self, path):    
+    def start_narrate(self, path):
+        self.writing=False    
         if self.page>=self.pages:
             return
         if self.index>=len(self.readlist):
             self.page+=1
             self.index=0
             self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
+        self.writing=True
         a=threading.Thread(target=tts.narrate(self.index,self.readlist)).start()
         b=threading.Thread(target=self.voicecheck).start()
+    
     def buttonpress(self):
+        self.writing=True
         print('k pressed')
         if self.is_file_open:
             self.is_started=True
@@ -286,25 +290,29 @@ class MyWindow(Window) :
                 self.start_narrate(self.file)
     
     def voicecheck(self):
-        print('started')
-        while True:
+        while self.writing:
+            print('started')
+            r = speech.Recognizer()    
+            with speech.Microphone() as source:            
+                print("Listening...")
+                r.pause_threshold = 1
+                audio = r.listen(source)        
             try:
-                with speech.Microphone() as source2:                        
-                    audio2 = self.r.listen(source2)
-                    MyText = self.r.recognize_google(audio2)
-                    text = MyText.lower()  
-                    print(text)
-                    if text != None:
-                        if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
-                            tts.narrate(self.index+1, self.readlist)
-                        elif any(x in text for x in ['previous', 'back', 'no']):
-                            pass
-            except speech.RequestError as e:
-                print('error')
-                pass                    
-            except speech.UnknownValueError:
-                print('error')
-                pass
+                print("Recognizing...")   
+                text = r.recognize_google(audio, language ='en-in')
+                print(text)       
+            except Exception as e:
+                text='bruh'
+                print(e)   
+                print("Unable to Recognize your voice.") 
+            if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):      
+                self.continue_narrate()
+                self.writing=False
+                break
+            elif any(x in text for x in ['previous', 'back', 'no']):
+                self.repeat_narrate()
+                self.writing=False
+                break
 
 if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')

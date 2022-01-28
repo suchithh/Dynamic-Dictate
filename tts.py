@@ -14,9 +14,8 @@ pages=1
 n=5 #setting for number of words to be read at once at max
 repeat=False 
 slow=False #setting for slow/normal speed reading
-writing=False
+writing=True
 path="Harry_Potter_and_The_Sorcerers_Stone.pdf" #give path here
-r = speech.Recognizer()
 tld=['us','co.uk','co.in'] #accent setting
 
 def delete_cache():
@@ -24,8 +23,6 @@ def delete_cache():
         if '.mp3' in file:
             os.remove(file)
 
-with speech.Microphone() as source2:
-    r.adjust_for_ambient_noise(source2, duration=0.2)
 
 def getpages(path):
     delete_cache()
@@ -74,26 +71,6 @@ def textparse(text):
 #         repeat=False
 #         pagereader(path, pages, page, index, writing, repeat)
 
-def voicecheck(index):
-    print('started')
-    while True:
-        try:
-            with speech.Microphone() as source2:                        
-                audio2 = r.listen(source2)
-                MyText = r.recognize_google(audio2)
-                text = MyText.lower()  
-                print(text)
-                if text != None:
-                    if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
-                        return index+1
-                    elif any(x in text for x in ['previous', 'back', 'no']):
-                        return index
-        except speech.RequestError as e:
-            print('error')
-            pass                    
-        except speech.UnknownValueError:
-            print('error')
-            pass
 
 # def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
 #     temp=''
@@ -116,3 +93,5 @@ def narrate(current_index,readlist):
 
 def getfirstpage(path):
     return textparse(pdfparse(0, path))
+
+
