@@ -67,14 +67,6 @@ def textparse(text):
             index+=1
     return readlist
 
-def keypress(path, pages, page, index, writing):  
-    if keyboard.is_pressed('space') or keyboard.is_pressed('d'):
-        index+=1
-        writing=False
-        pagereader(path, pages, page, index, writing)
-    elif keyboard.is_pressed('a'):
-        writing=False
-        pagereader(path, pages, page, index, writing)
 
 # def imagechecker(checktext, path, pages, page, index, writing):
 #     if image_check(checktext)>0.2:
@@ -82,7 +74,7 @@ def keypress(path, pages, page, index, writing):
 #         repeat=False
 #         pagereader(path, pages, page, index, writing, repeat)
 
-def voicecheck(path, pages, page, index, writing):
+def voicecheck(index):
     print('started')
     while True:
         try:
@@ -93,12 +85,9 @@ def voicecheck(path, pages, page, index, writing):
                 print(text)
                 if text != None:
                     if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
-                        index+=1
-                        writing= False
-                        pagereader(path, pages, page, index, writing)
+                        return index+1
                     elif any(x in text for x in ['previous', 'back', 'no']):
-                        writing= False
-                        pagereader(path, pages, page, index, writing)
+                        return index
         except speech.RequestError as e:
             print('error')
             pass                    
@@ -111,6 +100,7 @@ def voicecheck(path, pages, page, index, writing):
 #     return SequenceMatcher(None, checktext, temp).ratio()
 
 def narrate(current_index,readlist):
+    print('narrating')
     date_string = datetime.now().strftime("%d%m%Y%H%M%S") #generates an mp3 file with a unique name
     filename = "voice"+date_string+".mp3"
     speech = gTTS(text = readlist[current_index], lang='en', tld=tld[2], slow=slow) #initiates gtts with en-us could give user option to choose
@@ -124,20 +114,5 @@ def narrate(current_index,readlist):
     mixer.quit()
     os.remove(filename) #deletes temp file
 
-
-def pagereader(path, pages, page=0, index=0, writing=True):
-    if page>=pages:
-        return None, None
-    readlist=textparse(pdfparse(page, path))
-    if index>=len(readlist):
-        page+=1
-        index=0
-    narrate(index,readlist)
-    return page, index, readlist, writing, repeat
-
-pages=getpages(path)
-page=0
-index=0
-page, index, readlist, writing, repeat=pagereader(path, pages, page, index, writing)
-c=threading.Thread(target=voicecheck(path, pages, page, index, writing)).start()      
-b=threading.Thread(target=keypress(path, pages, page, index, writing, repeat)).start()                  
+def getfirstpage(path):
+    return textparse(pdfparse(0, path))

@@ -1,16 +1,24 @@
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui, QtWebEngineWidgets
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, QObject, QThread, pyqtSignal
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
-import sys, os, qrc_res, zipfile, cv2, text_detect, platform
+import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading
+import speech_recognition as speech
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
-class MyWindow(Window) :
 
+class MyWindow(Window) :
+    page=0
+    index=0
+    writing=True
+    is_file_open=False
+    is_started=False
+    readlist=[]
+    r = speech.Recognizer()
     # a signal which is triggered when the window resizes
     resized = QtCore.pyqtSignal()
 
@@ -20,6 +28,8 @@ class MyWindow(Window) :
     rfiles, rfilenames, rfiledisplaynames = [], [], []
     # current working directory path
     file_cwd = os.getcwd().replace('\\', '/')
+    with speech.Microphone() as source2:
+        r.adjust_for_ambient_noise(source2, duration=0.2)
 
     def __init__(self, win_width, win_height) :
         # super call
@@ -141,6 +151,17 @@ class MyWindow(Window) :
         camAction.setShortcut('Ctrl+Alt+V')
         camAction.triggered.connect(self.toggleCam)
 
+        narrAction = Widgets.QAction(self, text='Start Narration', icon=QIcon(':ic-cam-on.svg'))
+        narrAction.setShortcut('K')
+        narrAction.triggered.connect(self.buttonpress)
+
+        NextAction = Widgets.QAction(self, text='Continue Narration', icon=QIcon(':ic-cam-on.svg'))
+        NextAction.setShortcut('D')
+        NextAction.triggered.connect(self.continue_narrate)
+
+        PrevAction = Widgets.QAction(self, text='Repeat Narration', icon=QIcon(':ic-cam-on.svg'))
+        PrevAction.setShortcut('A')
+        PrevAction.triggered.connect(self.repeat_narrate)
         # opening recent menu has its own method
         self.openRMenu = self.fileMenu.addMenu('Open Recent...')
         self.makeRecentMenu()
@@ -148,13 +169,14 @@ class MyWindow(Window) :
         # menus
         self.fileMenu.addActions([openAction, saveAction])
         contMenu.addActions([camAction])
-
+        contMenu.addActions([narrAction])
         # menu bar
         self.menubar.setStyleSheet(stylesheet)
         self.menubar.addActions([self.fileMenu.menuAction(), contMenu.menuAction()])
+        
 
         # toolbar
-        toolbar.addActions([openAction, saveAction, camAction])
+        toolbar.addActions([openAction, saveAction, camAction, NextAction, PrevAction])
 
     def toggleCam(self) :
         self.camon = not self.camon
@@ -188,6 +210,7 @@ class MyWindow(Window) :
 
     # open action triggered
     def openfile(self) :
+        
         # path to pdf.js, a tool used to view PDFs
         path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
 
@@ -212,9 +235,11 @@ class MyWindow(Window) :
 
         self.frame.load(QUrl.fromUserInput(self.file))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
+        self.is_file_open=True
 
     # file opened from 'Open Recent...' menu
     def openrecentfile(self, index) :
+        
         # path to pdf.js, a tool used to view PDFs
         path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
 
@@ -227,9 +252,60 @@ class MyWindow(Window) :
         recents.write(str(self.rfiles))
         self.read()
         self.makeRecentMenu()
+        self.is_file_open=True
+        self.file=self.rfiles[index]
 
+    def start_narrate(self, path):    
+        if self.page>=self.pages:
+            return
+        if self.index>=len(self.readlist):
+            self.page+=1
+            self.index=0
+            self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
+        a=threading.Thread(target=tts.narrate(self.index,self.readlist)).start()
+        b=threading.Thread(target=self.voicecheck).start()
+    def buttonpress(self):
+        print('k pressed')
+        if self.is_file_open:
+            self.is_started=True
+            self.pages=tts.getpages(self.file)
+            self.readlist=tts.getfirstpage(self.file)
+            self.start_narrate(self.file)
 
-#Check system platform
+    def continue_narrate(self):
+        print('d pressed')
+        if self.is_file_open:
+            if self.is_started==True:
+                self.index+=1
+                self.start_narrate(self.file)
+    
+    def repeat_narrate(self):
+        print('a pressed')
+        if self.is_file_open:
+            if self.is_started==True:
+                self.start_narrate(self.file)
+    
+    def voicecheck(self):
+        print('started')
+        while True:
+            try:
+                with speech.Microphone() as source2:                        
+                    audio2 = self.r.listen(source2)
+                    MyText = self.r.recognize_google(audio2)
+                    text = MyText.lower()  
+                    print(text)
+                    if text != None:
+                        if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):                        
+                            tts.narrate(self.index+1, self.readlist)
+                        elif any(x in text for x in ['previous', 'back', 'no']):
+                            pass
+            except speech.RequestError as e:
+                print('error')
+                pass                    
+            except speech.UnknownValueError:
+                print('error')
+                pass
+
 if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
 else :
@@ -237,9 +313,8 @@ else :
 
 # initializing app with system arguments
 app = App(sys.argv)
-
 #initializing custom window with random dimensions (can be changed)
-win = MyWindow(2560, 1600)
+win = MyWindow(1600, 900)
 win.show()
 
 # exits program when close button is pressed
