@@ -6,12 +6,14 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
 import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading
 import speech_recognition as speech
+import except_thread as exc
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
 class MyWindow(Window) :
     page=0
+    b=None
     index=0
     writing=True
     is_file_open=False
@@ -265,10 +267,10 @@ class MyWindow(Window) :
             self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
         self.writing=True
         a=threading.Thread(target=tts.narrate,args=(self.index,self.readlist)).start()
-        b=threading.Thread(target=self.voicecheck).start()
-    
-    def buttonpress(self):
-        
+        self.b=exc.thread_with_exception(target=self.voicecheck)
+        self.b.start()
+
+    def buttonpress(self):      
         self.writing=True
         print('k pressed')
         if self.is_file_open:
@@ -278,16 +280,19 @@ class MyWindow(Window) :
             self.start_narrate(self.file)
 
     def continue_narrate(self):
-        self.writing=False
+        if self.b is not None:
+            self.b.raise_exception()
+            self.b.join()
         print('d pressed')
         if self.is_file_open:
             if self.is_started==True:
                 self.index+=1
                 self.start_narrate(self.file)
     
-    def repeat_narrate(self):
-        global b
-        self.writing=False     
+    def repeat_narrate(self):   
+        if self.b is not None:
+            self.b.raise_exception()
+            self.b.join()
         print('a pressed')
         if self.is_file_open:
             if self.is_started==True:
@@ -310,13 +315,11 @@ class MyWindow(Window) :
                 print(e)   
                 print("Unable to Recognize your voice.") 
             if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']):      
-                self.continue_narrate()
-                sys.exit()
+                a=threading.Thread(target=self.continue_narrate).start()
                 self.writing=False
                 break
             elif any(x in text for x in ['previous', 'back', 'no']):
-                self.repeat_narrate()
-                sys.exit()
+                a=threading.Thread(target=self.repeat_narrate).start()
                 self.writing=False
                 break
 
