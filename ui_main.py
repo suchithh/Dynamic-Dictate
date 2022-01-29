@@ -287,8 +287,7 @@ class MyWindow(Window) :
             return
         if self.index >= len(self.readlist) :
             self.page += 1
-            # self.frame.load(QUrl.fromUserInput(f'file:///{self.file}#page={(self.page+1)}'))
-            # self.frame.reload()
+            self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}#page={(self.page+1)}'))
             self.index = 0
             self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
         self.writing = True
