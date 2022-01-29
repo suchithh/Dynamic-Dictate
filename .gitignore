@@ -26,6 +26,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 pdfjs_copy/
+pdfjs/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -131,7 +132,6 @@ dmypy.json
 #Temp images
 output.jpg
 
-
 #Recents file
 recents.txt
 
@@ -144,4 +144,3 @@ testimg/
 #Misc. PDF
 *.pdf 
 output.jpg
-recents.txt
