@@ -4,22 +4,22 @@ from PyQt5.QtCore import QUrl, QObject, QThread, pyqtSignal
 from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
-import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading
-import speech_recognition as speech
-import except_thread as exc
+import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading, speech_recognition as speech, except_thread as exc, ui_settings
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
 class MyWindow(Window) :
-    page=0
-    b=None
-    index=0
-    writing=True
-    is_file_open=False
-    is_started=False
-    readlist=[]
+
+    page = 0
+    b = None
+    index = 0
+    writing = True
+    is_file_open = False
+    is_started = False
+    readlist = []
     r = speech.Recognizer()
+    settings = ui_settings.read_settings()
     # a signal which is triggered when the window resizes
     resized = QtCore.pyqtSignal()
 
@@ -58,7 +58,7 @@ class MyWindow(Window) :
         # read recent files opened
         self.read()
         # make menu bar and menus
-        self.makeMenu()
+        self.make_menu()
 
         # frame containing tab layout
         self.frame = QWebEngineView(self)
@@ -97,11 +97,11 @@ class MyWindow(Window) :
             if image is not None :
                 print(text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)))
                 cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
-                self.displayImage(image, True)
+                self.display_image(image, True)
         else :
-            self.displayImage(None, True)
+            self.display_image(None, True)
 
-    def displayImage(self, img, window=True) :
+    def display_image(self, img, window=True) :
         outImage = None
         if self.camon :
             qformat = QtGui.QImage.Format_Indexed8
@@ -132,7 +132,7 @@ class MyWindow(Window) :
             else :
                 self.rfiledisplaynames.append(self.rfilenames[-1])
 
-    def makeMenu(self) :
+    def make_menu(self) :
         # menu bar
         self.menubar = self.menuBar()
         # fixed size (size does not change with window)
@@ -146,30 +146,33 @@ class MyWindow(Window) :
         # actions
         openAction = Widgets.QAction(self, text='Open...', icon=QIcon(':ic-open.svg'))
         openAction.setShortcut('Ctrl+O')
-        openAction.triggered.connect(self.openfile)
+        openAction.triggered.connect(self.open_file)
         saveAction = Widgets.QAction(self, text='Save Progress...', icon=QIcon(':ic-save.svg'))
         saveAction.setShortcut('Ctrl+S')
         camAction = Widgets.QAction(self, text='Toggle Camera', icon=QIcon(':ic-cam-on.svg'))
         camAction.setShortcut('Ctrl+Alt+V')
-        camAction.triggered.connect(self.toggleCam)
+        camAction.triggered.connect(self.toggle_cam)
 
         narrAction = Widgets.QAction(self, text='Start Narration', icon=QIcon(':ic-cam-on.svg'))
         narrAction.setShortcut('K')
         narrAction.triggered.connect(self.buttonpress)
+        nextAction = Widgets.QAction(self, text='Continue Narration', icon=QIcon(':ic-cam-on.svg'))
+        nextAction.setShortcut('D')
+        nextAction.triggered.connect(self.continue_narrate)
+        prevAction = Widgets.QAction(self, text='Repeat Narration', icon=QIcon(':ic-cam-on.svg'))
+        prevAction.setShortcut('A')
+        prevAction.triggered.connect(self.repeat_narrate)
 
-        NextAction = Widgets.QAction(self, text='Continue Narration', icon=QIcon(':ic-cam-on.svg'))
-        NextAction.setShortcut('D')
-        NextAction.triggered.connect(self.continue_narrate)
+        setAction = Widgets.QAction(self, text='Preferences', icon=QIcon(':ic-cam-on.svg'))
+        setAction.setShortcut('Ctrl+Shift+P')
+        setAction.triggered.connect(self.open_settings)
 
-        PrevAction = Widgets.QAction(self, text='Repeat Narration', icon=QIcon(':ic-cam-on.svg'))
-        PrevAction.setShortcut('A')
-        PrevAction.triggered.connect(self.repeat_narrate)
         # opening recent menu has its own method
         self.openRMenu = self.fileMenu.addMenu('Open Recent...')
-        self.makeRecentMenu()
+        self.make_recent_menu()
         
         # menus
-        self.fileMenu.addActions([openAction, saveAction])
+        self.fileMenu.addActions([openAction, saveAction, setAction])
         contMenu.addActions([camAction])
         contMenu.addActions([narrAction])
         # menu bar
@@ -178,27 +181,33 @@ class MyWindow(Window) :
         
 
         # toolbar
-        toolbar.addActions([openAction, saveAction, camAction, NextAction, PrevAction])
+        toolbar.addActions([openAction, saveAction, camAction, nextAction, prevAction])
 
-    def toggleCam(self) :
+    def toggle_cam(self) :
         self.camon = not self.camon
         if self.camon :
             self.start_webcam()
         else :
             self.stop_webcam()
 
+    def open_settings(self) :
+        dialog = ui_settings.PreferencesDialog()
+        dialog.exec_()
+        dialog.show()
+        self.settings = ui_settings.read_settings()
+
     #recent menu opened here
-    def makeRecentMenu(self) :
+    def make_recent_menu(self) :
         self.openRMenu.clear()
         if (self.rfiles) :
             lastFileAction = Widgets.QAction(self, text=self.rfiles[-1].split('/')[-1])
             lastFileAction.setShortcut('Ctrl+Shift+O')
-            lastFileAction.triggered.connect(lambda: self.openrecentfile(-1))
+            lastFileAction.triggered.connect(lambda: self.open_recent_file(-1))
             self.openRMenu.addAction(lastFileAction)
             self.openRMenu.addSeparator()
         for i in range(len(self.rfiles)-2, -1, -1) :
             fileAction = Widgets.QAction(self, text=self.rfiles[i].split('/')[-1])
-            fileAction.triggered.connect(lambda: self.openrecentfile(i))
+            fileAction.triggered.connect(lambda: self.open_recent_file(i))
             self.openRMenu.addAction(fileAction)
 
     def resizeEvent(self, event) :
@@ -211,7 +220,7 @@ class MyWindow(Window) :
         self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
 
     # open action triggered
-    def openfile(self) :
+    def open_file(self) :
         
         # path to pdf.js, a tool used to view PDFs
         path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
@@ -233,14 +242,14 @@ class MyWindow(Window) :
         recents = open('recents.txt', 'w')
         recents.write(str(self.rfiles))
         self.read()
-        self.makeRecentMenu()
+        self.make_recent_menu()
 
         self.frame.load(QUrl.fromUserInput(self.file))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.is_file_open=True
 
     # file opened from 'Open Recent...' menu
-    def openrecentfile(self, index) :
+    def open_recent_file(self, index) :
         
         # path to pdf.js, a tool used to view PDFs
         path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
@@ -253,7 +262,7 @@ class MyWindow(Window) :
         recents = open('recents.txt', 'w')
         recents.write(str(self.rfiles))
         self.read()
-        self.makeRecentMenu()
+        self.make_recent_menu()
         self.is_file_open=True
         self.file=self.rfiles[index]
 
