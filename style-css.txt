@@ -61,7 +61,7 @@ QToolBar::handle {
 QToolBar::item:hover {
     background-color: #444444;
 }
-QSpinBox {
+/*QSpinBox {
     font-size: 20px;
 }
 QSpinBox::up-button {
@@ -77,7 +77,7 @@ QSpinBox::down-button {
     border-image: url(res/ic-down-2.svg);
     width: 16px;
     height: 16px;
-}
+}*/
 QTabWidget::tab-bar {
     background-color: #222222;
 }
