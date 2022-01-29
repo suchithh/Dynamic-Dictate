@@ -24,6 +24,7 @@ class MyWindow(Window) :
     readlist = []
     r = speech.Recognizer()
     settings = ui_settings.read_settings()
+
     # a signal which is triggered when the window resizes
     resized = QtCore.pyqtSignal()
 
@@ -49,6 +50,9 @@ class MyWindow(Window) :
         self.setStyleSheet(stylesheet)
         self.resized.connect(self.resize)
 
+        # path to pdf.js, a tool used to view PDFs
+        self.path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
+
         # recents.txt is required for proper functioning of the program
         if (not os.path.isfile('recents.txt')) :
             newfile = open('recents.txt', 'w')
@@ -67,8 +71,8 @@ class MyWindow(Window) :
         # frame containing tab layout
         self.frame = QWebEngineView(self)
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
-        self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
-        self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PdfViewerEnabled, True)
+        # self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
+        # self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PdfViewerEnabled, True)
 
         # text label for webcam image
         self.image_label = Widgets.QLabel(self)
@@ -239,10 +243,6 @@ class MyWindow(Window) :
 
     # open action triggered
     def open_file(self) :
-        
-        # path to pdf.js, a tool used to view PDFs
-        path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
-
         # a frame that shows web requests
         options = QFileDialog.Options()
         self.file, _ = QFileDialog.getOpenFileName(self, 'QFileDialog.getOpenFileName', '', 'PDF files (*.pdf)', options=options)
@@ -262,20 +262,17 @@ class MyWindow(Window) :
         self.read()
         self.make_recent_menu()
 
-        self.frame.load(QUrl.fromUserInput(self.file))
-        self.frame.page().setZoomFactor(2.0)
+        # a frame that shows web requests
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.is_file_open = True
 
     # file opened from 'Open Recent...' menu
     def open_recent_file(self, index) :
-        
-        # path to pdf.js, a tool used to view PDFs
-        path_pdfjs = f'file:///{self.file_cwd}/pdfjs_copy/web/viewer.html'
-
         # a frame that shows web requests
-        self.frame.load(QUrl.fromUserInput(self.rfiles[index]))
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.rfiles[index]}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
+        self.file = self.rfiles[index]
 
         self.rfiles.append(self.rfiles.pop(index))
         recents = open('recents.txt', 'w')
@@ -283,7 +280,6 @@ class MyWindow(Window) :
         self.read()
         self.make_recent_menu()
         self.is_file_open = True
-        self.file = self.rfiles[index]
 
     def start_narrate(self, path) :
         self.writing = False    
