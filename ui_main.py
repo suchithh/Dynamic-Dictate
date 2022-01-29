@@ -1,3 +1,4 @@
+from tracemalloc import stop
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui, QtWebEngineWidgets
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QUrl, QObject, QThread, pyqtSignal
@@ -13,10 +14,13 @@ class MyWindow(Window) :
 
     page = 0
     b = None
+    d= None
+    c=None
     index = 0
     writing = True
     is_file_open = False
     is_started = False
+    is_audiobook= False
     readlist = []
     r = speech.Recognizer()
     settings = ui_settings.read_settings()
@@ -163,6 +167,14 @@ class MyWindow(Window) :
         prevAction.setShortcut('A')
         prevAction.triggered.connect(self.repeat_narrate)
 
+        stopAction = Widgets.QAction(self, text='Stop Narration', icon=QIcon(':ic-cam-on.svg'))
+        stopAction.setShortcut('X')
+        stopAction.triggered.connect(self.stop_narrate)
+
+        Audiobook = Widgets.QAction(self, text='Read as Audiobook', icon=QIcon(':ic-cam-on.svg'))
+        Audiobook.setShortcut('R')
+        Audiobook.triggered.connect(self.start_audiobook)
+
         setAction = Widgets.QAction(self, text='Preferences', icon=QIcon(':ic-cam-on.svg'))
         setAction.setShortcut('Ctrl+Shift+P')
         setAction.triggered.connect(self.open_settings)
@@ -172,7 +184,7 @@ class MyWindow(Window) :
         self.make_recent_menu()
         
         # menus
-        self.fileMenu.addActions([openAction, saveAction, setAction])
+        self.fileMenu.addActions([openAction, saveAction, setAction, stopAction, Audiobook])
         contMenu.addActions([camAction])
         contMenu.addActions([narrAction])
         # menu bar
@@ -275,10 +287,18 @@ class MyWindow(Window) :
             self.index=0
             self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
         self.writing=True
-        a=threading.Thread(target=tts.narrate,args=(self.index,self.readlist)).start()
+        self.d=exc.thread_with_exception(target=self.start_tts)
+        self.d.start()
         self.b=exc.thread_with_exception(target=self.voicecheck)
         self.b.start()
+    
 
+    def start_tts(self):
+        tts.narrate(self.index,self.readlist)
+        if self.d is not None:
+                self.d.raise_exception()
+                self.d.join()
+    
     def buttonpress(self):      
         self.writing=True
         print('k pressed')
@@ -292,6 +312,11 @@ class MyWindow(Window) :
         if self.b is not None:
             self.b.raise_exception()
             self.b.join()
+            if self.d is not None:
+                self.d.raise_exception()
+                self.d.join()
+                tts.mixer.quit()
+                tts.delete_cache()
         print('d pressed')
         if self.is_file_open:
             if self.is_started==True:
@@ -302,6 +327,11 @@ class MyWindow(Window) :
         if self.b is not None:
             self.b.raise_exception()
             self.b.join()
+            if self.d is not None:
+                self.d.raise_exception()
+                self.d.join()
+                tts.mixer.quit()
+                tts.delete_cache()
         print('a pressed')
         if self.is_file_open:
             if self.is_started==True:
@@ -331,6 +361,35 @@ class MyWindow(Window) :
                 a=threading.Thread(target=self.repeat_narrate).start()
                 self.writing=False
                 break
+    
+    def stop_narrate(self):
+        if self.is_file_open:
+            if self.is_started==True and self.is_audiobook==False:
+                self.is_started=False
+                if self.b is not None:
+                    self.b.raise_exception()
+                    self.b.join()
+                    tts.delete_cache()
+            elif self.is_started==False and self.is_audiobook==True:
+                self.is_audiobook=False
+                if self.c is not None:
+                    self.c.raise_exception()
+                    self.c.join()
+                    tts.mixer.quit()
+                    tts.delete_cache()
+
+    def start_audiobook(self):
+        if self.is_file_open:
+            if self.is_started==False:
+                self.is_audiobook=True
+                self.pages=tts.getpages(self.file)
+                self.c=exc.thread_with_exception(target=self.read_audiobook)
+                self.c.start()
+    
+    def read_audiobook(self):    
+        for page in range(self.pages):
+            text=[tts.Audiobookparse(page, self.file).replace('\n','')]
+            tts.narrate(0,text)
 
 if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')

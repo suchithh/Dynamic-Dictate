@@ -14,7 +14,7 @@ class thread_with_exception(threading.Thread):
             while True:
                 self.target()
         finally:
-            print('ended')
+            pass
           
     def get_id(self):
  
