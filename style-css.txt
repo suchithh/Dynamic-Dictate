@@ -17,6 +17,9 @@ QGroupBox {
 QRadioButton {
     color: #ffffff;
 }
+QCheckBox {
+    color: #ffffff;
+}
 QMenuBar {
     background-color: #333333; 
     border: 1px solid black;

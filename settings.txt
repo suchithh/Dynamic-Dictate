@@ -1,1 +1,1 @@
-{'Narration': {'Speed': 'Normal', 'Region': 'English (India)', 'Maximum_Words_Read': '5'}}
+{'Narration': {'Speed': 'Normal', 'Region': 'English (India)', 'Maximum_Words_Read': '5'}, 'On-Startup': {'Camera-on': False}}

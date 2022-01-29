@@ -19,5 +19,11 @@
     <file alias="ic-cam-off.svg">res/ic-cam-off.svg</file>
 
     <file alias="ic-close.svg">res/ic-close.svg</file>
+
+    <file alias="ic-read.svg">res/ic-read.svg</file>
+    <file alias="ic-prev.svg">res/ic-prev.svg</file>
+    <file alias="ic-next.svg">res/ic-next.svg</file>
+
+    <file alias="ic-settings.svg">res/ic-settings.svg</file>
 </qresource>
 </RCC>
