@@ -1,59 +1,74 @@
-import platform
 import cv2
 import pytesseract
 from PIL import Image
 from autocorrect import Speller
+import base64
+import requests
+import json
+import os
 
-import time
+API_KEY = None
+
+def get_key():
+    global API_KEY
+    if API_KEY==None:
+        with open("./key/api_key.txt","r") as key_text:
+            API_KEY = key_text.readline().rstrip()
+
+def set_tess_path(tess_path):
+    pytesseract.pytesseract.tesseract_cmd = tess_path
 
 def img_thresholding(image):
     img = image.copy()
-
     # Adaptive Thresholding
     # img = cv2.adaptiveThreshold(img,255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,11,2)
-    
     # Otsu Thresholding
     blur = cv2.GaussianBlur(img,(5,5),0)
     dump, img = cv2.threshold(blur,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
-    # Convert to RGB for tesseract
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-    # Write output to file
-    # cv2.imwrite('output.jpg', img)
-
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)     # Convert to RGB for tesseract
+    #cv2.imwrite('output.jpg', img)                # Write output to file
     return(Image.fromarray(img))
 
-def detect_text(img_path):
-    spell_check = Speller(only_replacements=True)
-    return(spell_check(pytesseract.image_to_string(img_thresholding(img_path)))[:-2])
-    
+def api_detect(image):
+    cv2.imwrite("./temp/currframe.jpg", image)
+    with open("./temp/currframe.jpg", "rb") as tempimg:
+        converted_string = base64.b64encode(tempimg.read())
+    data_obj = {"requests": [{
+          "image": {"content": converted_string},
+          "features": [{"type": "DOCUMENT_TEXT_DETECTION"}]
+    }]}
+    api_return = requests.post("https://vision.googleapis.com/v1/images:annotate?key={}".format(API_KEY), json=data_obj)
+    api_return = json.loads(api_return.text)
+    complete_text = api_return['responses'][0]['textAnnotations'][0]['description']
+    coords_tl = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][0]
+    coords_br = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][2]
+    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
+    return (image, complete_text)
+
+def detect_text(image):
+    spell_check = Speller()
+    thr_img = img_thresholding(image)
+    ocr_data = pytesseract.image_to_data(thr_img, output_type=pytesseract.Output.DICT)
+    if (sum(list(map(int,ocr_data['conf'])))/len(ocr_data))>97:
+        return(image, spell_check(pytesseract.image_to_string(thr_img))[:-2])
+    else:
+        return(api_detect(image))
     #Texblob spelling correction and remove extraneous character
     #return (TextBlob(pytesseract.image_to_string(img_thresholding(img_path))).correct()[:-2])
     #Without spell check
     #return (pytesseract.image_to_string(img_thresholding(img_path)))
 
-
-def set_tess_path(tess_path):
-    pytesseract.pytesseract.tesseract_cmd = tess_path
-
 def main():
+    try:
+        os.mkdir('temp')
+    except FileExistsError:
+        pass
+    get_key()
     set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
-    print(detect_text(cv2.imread(r'testimg\test1.jpg',0)))
+    print(detect_text(cv2.imread(r'testimg\test2.jpg',0)))
 
 if __name__=="__main__":
     main()
 
 
-#Test webcam code
-# video = cv2.VideoCapture(0)
-# video.set(3, 640)
-# video.set(4, 480)
-
-# while True:
-# 	vidframe = vs.read()
-# 	vidframe = imutils.resize(vidframe, width=400)
-# 	# grab the frame dimensions and convert it to a blob
-# 	# (h, w) = vidframe.shape[:2]
-# 	# vidframeblob = cv2.resize(vidframe, (300, 300))
-#     print (detect_text(vidframe))

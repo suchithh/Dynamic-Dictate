@@ -144,3 +144,6 @@ testimg/
 #Misc. PDF
 *.pdf 
 output.jpg
+
+temp/
+key/
