@@ -41,10 +41,12 @@ def api_detect(image):
     }]}
     api_return = requests.post("https://vision.googleapis.com/v1/images:annotate?key={}".format(API_KEY), json=data_obj)
     api_return = json.loads(api_return.text)
-    complete_text = api_return['responses'][0]['textAnnotations'][0]['description']
-    coords_tl = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][0]
-    coords_br = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][2]
-    cv2.imwrite('output.jpg', image)
+    if 'textAnnotations' in api_return['responses'][0]:
+        complete_text = api_return['responses'][0]['textAnnotations'][0]['description']
+        coords_tl = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][0]
+        coords_br = api_return['responses'][0]['textAnnotations'][0]['boundingPoly']['vertices'][2]
+    else:
+        coords_tl,coords_br,complete_text={'x': 0, 'y': 0}, {'x': 0, 'y': 0}, ""
     return (coords_tl, coords_br, complete_text)
 
 def detect_text(image):
