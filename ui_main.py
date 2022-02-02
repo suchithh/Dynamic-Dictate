@@ -103,7 +103,9 @@ class MyWindow(Window) :
         if self.camon and self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
-                print(text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)))
+                coords_tl, coords_br, text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
+                print(text)
                 cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
                 self.display_image(image, True)
         else :
@@ -399,6 +401,11 @@ if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
 else :
     text_detect.set_tess_path('tesseract')
+try:
+    os.mkdir('temp')
+except FileExistsError:
+    pass
+text_detect.get_key()
 
 # initializing app with system arguments
 app = App(sys.argv)
