@@ -412,15 +412,20 @@ class MyWindow(Window) :
             tts.narrate(0,text)
     
     def camcheck(self):
-        temp=self.readlist[self.index]
-        checktext=''
-        words=self.text.split()
-        listwords=words[len(words)-self.n::]
-        for i in listwords:
-            checktext+=i+' '
-        print(SequenceMatcher(None, checktext, temp).ratio())
-        if SequenceMatcher(None, checktext, temp).ratio()>0.5:
-                self.continue_narrate()
+        while self.writing:
+            temp=self.readlist[self.index]
+            indexer=len(temp.split())
+            checktext=''
+            words=self.text.split()
+            if len(words)>=indexer:
+                listwords=words[len(words)-indexer::]
+                for i in listwords:
+                    checktext+=i+' '
+                if SequenceMatcher(None, checktext.lower(), temp.lower()).ratio()>0.5:
+                    print('good')
+                    a = threading.Thread(target=self.continue_narrate).start()
+                    self.writing=False
+                    break
     
 if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
