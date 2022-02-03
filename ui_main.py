@@ -109,7 +109,9 @@ class MyWindow(Window) :
                 if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
                     image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
                 print(self.text)
-                cv2.resize(image, (self.image_label.width(), self.image_label.height()), interpolation=cv2.INTER_CUBIC)
+                width=self.image_label.width()
+                height=self.image_label.height()
+                image=cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
                 self.display_image(image, True)
         else :
             self.display_image(None, True)
