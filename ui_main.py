@@ -421,8 +421,8 @@ class MyWindow(Window) :
             words=self.text.split()
             if len(words)>=indexer:
                 listwords=words[len(words)-indexer::]
-                for i in listwords:
-                    checktext+=i+' '
+                checktext=' '.join(listwords)
+                print(checktext)
                 if SequenceMatcher(None, checktext.lower(), temp.lower()).ratio()>0.5:
                     print('good')
                     a = threading.Thread(target=self.continue_narrate).start()
