@@ -6,16 +6,18 @@ from PyQt5.Qt import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
 import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading, speech_recognition as speech, except_thread as exc, ui_settings
+from difflib import SequenceMatcher
 
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
 class MyWindow(Window) :
-
+    text=''
     page = 0
     b = None
     d= None
     c=None
+    e=None
     index = 0
     writing = True
     is_file_open = False
@@ -24,7 +26,7 @@ class MyWindow(Window) :
     readlist = []
     r = speech.Recognizer()
     settings = ui_settings.read_settings()
-
+    n=int(settings['Narration']['Maximum_Words_Read'])
     # a signal which is triggered when the window resizes
     resized = QtCore.pyqtSignal()
 
@@ -103,10 +105,10 @@ class MyWindow(Window) :
         if self.camon and self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
-                coords_tl, coords_br, text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
                 image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
-                print(text)
-                cv2.resize(image, (1280, 720), interpolation=cv2.INTER_CUBIC)
+                print(self.text)
+                cv2.resize(image, (self.image_label.width(), self.image_label.height()), interpolation=cv2.INTER_CUBIC)
                 self.display_image(image, True)
         else :
             self.display_image(None, True)
@@ -297,6 +299,8 @@ class MyWindow(Window) :
         self.d.start()
         self.b = exc.thread_with_exception(target=self.voicecheck)
         self.b.start()
+        self.e= exc.thread_with_exception(target=self.camcheck)
+        self.e.start()
     
 
     def start_tts(self) :
@@ -323,6 +327,9 @@ class MyWindow(Window) :
                 self.d.join()
                 tts.mixer.quit()
                 tts.delete_cache()
+            if self.e is not None:
+                self.e.raise_exception()
+                self.e.join()
         print('d pressed')
         if self.is_file_open :
             if self.is_started :
@@ -338,6 +345,9 @@ class MyWindow(Window) :
                 self.d.join()
                 tts.mixer.quit()
                 tts.delete_cache()
+            if self.e is not None:
+                self.e.raise_exception()
+                self.e.join()
         print('a pressed')
         if self.is_file_open :
             if self.is_started :
@@ -376,6 +386,9 @@ class MyWindow(Window) :
                     self.b.raise_exception()
                     self.b.join()
                     tts.delete_cache()
+                if self.e is not None:
+                    self.e.raise_exception()
+                    self.e.join()
             elif self.is_started==False and self.is_audiobook==True:
                 self.is_audiobook=False
                 if self.c is not None:
@@ -396,7 +409,17 @@ class MyWindow(Window) :
         for page in range(self.pages) :
             text=[tts.Audiobookparse(page, self.file).replace('\n','')]
             tts.narrate(0,text)
-
+    
+    def camcheck(self):
+        temp=self.readlist[self.index]
+        checktext=''
+        words=self.text.split()
+        listwords=words[len(words)-self.n::]
+        for i in listwords:
+            checktext+=i+' '
+        if SequenceMatcher(None, checktext, temp).ratio()>0.5:
+                self.continue_narrate()
+    
 if platform.system() == 'Windows' and platform.machine().endswith('64') :
     text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
 else :
