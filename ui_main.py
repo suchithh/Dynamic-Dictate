@@ -12,21 +12,21 @@ from difflib import SequenceMatcher
 stylesheet = open('style-css.txt', 'r').read()
 
 class MyWindow(Window) :
-    text=''
+    text = ''
     page = 0
     b = None
-    d= None
-    c=None
-    e=None
+    d = None
+    c = None
+    e = None
     index = 0
     writing = True
     is_file_open = False
     is_started = False
-    is_audiobook= False
+    is_audiobook =  False
     readlist = []
     r = speech.Recognizer()
     settings = ui_settings.read_settings()
-    n=int(settings['Narration']['Maximum_Words_Read'])
+    n = int(settings['Narration']['Maximum_Words_Read'])
     # a signal which is triggered when the window resizes
     resized = QtCore.pyqtSignal()
 
@@ -37,7 +37,7 @@ class MyWindow(Window) :
     # current working directory path
     file_cwd = os.getcwd().replace('\\', '/')
     with speech.Microphone() as source2:
-        r.adjust_for_ambient_noise(source2, duration=0.2)
+        r.adjust_for_ambient_noise(source2, duration = 0.2)
     
 
     def __init__(self, win_width, win_height) :
@@ -84,7 +84,7 @@ class MyWindow(Window) :
         self.cap = None
         self.camon = self.settings['On-Startup']['Camera-on']
 
-        self.timer = QtCore.QTimer(self, interval=500)
+        self.timer = QtCore.QTimer(self, interval = 500)
         self.timer.timeout.connect(self.update_frame)
         self._image_counter = 0
         self.start_webcam()
@@ -97,7 +97,7 @@ class MyWindow(Window) :
 
     @QtCore.pyqtSlot()
     def stop_webcam(self) :
-        if (self.cap is not None and  not self.camon) :
+        if (self.cap is not None and not self.camon) :
             self.cap = None
 
     @QtCore.pyqtSlot()
@@ -109,14 +109,14 @@ class MyWindow(Window) :
                 if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
                     image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
                 print(self.text)
-                width=self.image_label.width()
-                height=self.image_label.height()
-                image=cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
+                width = self.image_label.width()
+                height = self.image_label.height()
+                image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
                 self.display_image(image, True)
         else :
             self.display_image(None, True)
 
-    def display_image(self, img, window=True) :
+    def display_image(self, img, window = True) :
         outImage = None
         if self.camon :
             qformat = QtGui.QImage.Format_Indexed8
@@ -159,13 +159,13 @@ class MyWindow(Window) :
         contMenu = self.menubar.addMenu('&Controls')
 
         # actions
-        openAction = Widgets.QAction(self, text='Open...', icon=QIcon(':ic-open.svg'))
+        openAction = Widgets.QAction(self, text = 'Open...', icon = QIcon(':ic-open.svg'))
         openAction.setShortcut('Ctrl+O')
         openAction.triggered.connect(self.open_file)
-        saveAction = Widgets.QAction(self, text='Save Progress...', icon=QIcon(':ic-save.svg'))
+        saveAction = Widgets.QAction(self, text = 'Save Progress...', icon = QIcon(':ic-save.svg'))
         saveAction.setShortcut('Ctrl+S')
 
-        self.camAction = Widgets.QAction(self, text='Toggle Camera')
+        self.camAction = Widgets.QAction(self, text = 'Toggle Camera')
         if (self.settings['On-Startup']['Camera-on']) :
             self.camAction.setIcon(QIcon(':ic-cam-off.svg'))
         else :
@@ -173,25 +173,25 @@ class MyWindow(Window) :
         self.camAction.setShortcut('Ctrl+Alt+V')
         self.camAction.triggered.connect(self.toggle_cam)
 
-        narrAction = Widgets.QAction(self, text='Start Narration', icon=QIcon(':ic-play.svg'))
+        narrAction = Widgets.QAction(self, text = 'Start Narration', icon = QIcon(':ic-play.svg'))
         narrAction.setShortcut('K')
         narrAction.triggered.connect(self.buttonpress)
-        nextAction = Widgets.QAction(self, text='Continue Narration', icon=QIcon(':ic-next.svg'))
+        nextAction = Widgets.QAction(self, text = 'Continue Narration', icon = QIcon(':ic-next.svg'))
         nextAction.setShortcut('D')
         nextAction.triggered.connect(self.continue_narrate)
-        prevAction = Widgets.QAction(self, text='Repeat Narration', icon=QIcon(':ic-prev.svg'))
+        prevAction = Widgets.QAction(self, text = 'Repeat Narration', icon = QIcon(':ic-prev.svg'))
         prevAction.setShortcut('A')
         prevAction.triggered.connect(self.repeat_narrate)
 
-        stopAction = Widgets.QAction(self, text='Stop Narration', icon=QIcon(':ic-stop.svg'))
+        stopAction = Widgets.QAction(self, text = 'Stop Narration', icon = QIcon(':ic-stop.svg'))
         stopAction.setShortcut('X')
         stopAction.triggered.connect(self.stop_narrate)
 
-        audioAction = Widgets.QAction(self, text='Read as Audiobook', icon=QIcon(':ic-read.svg'))
+        audioAction = Widgets.QAction(self, text = 'Read as Audiobook', icon = QIcon(':ic-read.svg'))
         audioAction.setShortcut('R')
         audioAction.triggered.connect(self.start_audiobook)
 
-        setAction = Widgets.QAction(self, text='Preferences', icon=QIcon(':ic-settings.svg'))
+        setAction = Widgets.QAction(self, text = 'Preferences', icon = QIcon(':ic-settings.svg'))
         setAction.setShortcut('Ctrl+Shift+P')
         setAction.triggered.connect(self.open_settings)
 
@@ -229,13 +229,13 @@ class MyWindow(Window) :
     def make_recent_menu(self) :
         self.openRMenu.clear()
         if (self.rfiles) :
-            lastFileAction = Widgets.QAction(self, text=self.rfiles[-1].split('/')[-1])
+            lastFileAction = Widgets.QAction(self, text = self.rfiles[-1].split('/')[-1])
             lastFileAction.setShortcut('Ctrl+Shift+O')
             lastFileAction.triggered.connect(lambda: self.open_recent_file(-1))
             self.openRMenu.addAction(lastFileAction)
             self.openRMenu.addSeparator()
         for i in range(len(self.rfiles)-2, -1, -1) :
-            fileAction = Widgets.QAction(self, text=self.rfiles[i].split('/')[-1])
+            fileAction = Widgets.QAction(self, text = self.rfiles[i].split('/')[-1])
             fileAction.triggered.connect(lambda: self.open_recent_file(i))
             self.openRMenu.addAction(fileAction)
 
@@ -252,7 +252,7 @@ class MyWindow(Window) :
     def open_file(self) :
         # a frame that shows web requests
         options = QFileDialog.Options()
-        self.file, _ = QFileDialog.getOpenFileName(self, 'QFileDialog.getOpenFileName', '', 'PDF files (*.pdf)', options=options)
+        self.file, _ = QFileDialog.getOpenFileName(self, 'QFileDialog.getOpenFileName', '', 'PDF files (*.pdf)', options = options)
         filename = self.file.split('/')[-1]
         if (len(filename) > 22) :
             self.filedisplayname = self.filename[:20]+'...'
@@ -270,14 +270,14 @@ class MyWindow(Window) :
         self.make_recent_menu()
 
         # a frame that shows web requests
-        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}'))
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.file}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.is_file_open = True
 
     # file opened from 'Open Recent...' menu
     def open_recent_file(self, index) :
         # a frame that shows web requests
-        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.rfiles[index]}'))
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.rfiles[index]}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.file = self.rfiles[index]
 
@@ -290,19 +290,19 @@ class MyWindow(Window) :
 
     def start_narrate(self, path) :
         self.writing = False    
-        if self.page >= self.pages:
+        if self.page >= self.pages :
             return
-        if self.index >= len(self.readlist) :
+        if self.index >=  len(self.readlist) :
             self.page += 1
-            self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}#page={(self.page+1)}'))
+            self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.file}#page = {(self.page+1)}'))
             self.index = 0
-            self.readlist=tts.textparse(tts.pdfparse(self.page, self.file))
+            self.readlist = tts.textparse(tts.pdfparse(self.page, self.file))
         self.writing = True
-        self.d = exc.thread_with_exception(target=self.start_tts)
+        self.d = exc.thread_with_exception(target = self.start_tts)
         self.d.start()
-        self.b = exc.thread_with_exception(target=self.voicecheck)
+        self.b = exc.thread_with_exception(target = self.voicecheck)
         self.b.start()
-        self.e= exc.thread_with_exception(target=self.camcheck)
+        self.e =  exc.thread_with_exception(target = self.camcheck)
         self.e.start()
     
 
@@ -317,8 +317,8 @@ class MyWindow(Window) :
         print('k pressed')
         if self.is_file_open :
             self.is_started = True
-            self.pages=tts.getpages(self.file)
-            self.readlist=tts.getfirstpage(self.file)
+            self.pages = tts.getpages(self.file)
+            self.readlist = tts.getfirstpage(self.file)
             self.start_narrate(self.file)
 
     def continue_narrate(self) :
@@ -366,35 +366,35 @@ class MyWindow(Window) :
                 audio = r.listen(source)        
             try:
                 print("Recognizing...")   
-                text = r.recognize_google(audio, language='en-in')
+                text = r.recognize_google(audio, language = 'en-in')
                 print(text)       
             except Exception as e :
-                text='bruh'
+                text = 'bruh'
                 print(e)   
                 print("Unable to Recognize your voice.") 
             if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']) :      
-                a = threading.Thread(target=self.continue_narrate).start()
+                a = threading.Thread(target = self.continue_narrate).start()
                 self.writing = False
                 break
             elif any(x in text for x in ['previous', 'back', 'no']) :
-                a = threading.Thread(target=self.repeat_narrate).start()
+                a = threading.Thread(target = self.repeat_narrate).start()
                 self.writing = False
                 break
     
     def stop_narrate(self) :
-        if self.is_file_open:
-            if self.is_started==True and self.is_audiobook==False:
-                self.is_started=False
-                if self.b is not None:
+        if self.is_file_open :
+            if self.is_started and not self.is_audiobook :
+                self.is_started = False
+                if self.b is not None :
                     self.b.raise_exception()
                     self.b.join()
                     tts.delete_cache()
-                if self.e is not None:
+                if self.e is not None :
                     self.e.raise_exception()
                     self.e.join()
-            elif self.is_started==False and self.is_audiobook==True:
-                self.is_audiobook=False
-                if self.c is not None:
+            elif not self.is_started and self.is_audiobook :
+                self.is_audiobook = False
+                if self.c is not None :
                     self.c.raise_exception()
                     self.c.join()
                     tts.mixer.quit()
@@ -402,31 +402,31 @@ class MyWindow(Window) :
 
     def start_audiobook(self) :
         if self.is_file_open:
-            if self.is_started==False:
-                self.is_audiobook=True
-                self.pages=tts.getpages(self.file)
-                self.c=exc.thread_with_exception(target=self.read_audiobook)
+            if not self.is_started :
+                self.is_audiobook = True
+                self.pages = tts.getpages(self.file)
+                self.c = exc.thread_with_exception(target = self.read_audiobook)
                 self.c.start()
     
     def read_audiobook(self) :    
         for page in range(self.pages) :
-            text=[tts.Audiobookparse(page, self.file).replace('\n','')]
+            text = [tts.Audiobookparse(page, self.file).replace('\n','')]
             tts.narrate(0,text)
     
     def camcheck(self):
         while self.writing:
-            temp=self.readlist[self.index]
-            indexer=len(temp.split())
-            checktext=''
-            words=self.text.split()
-            if len(words)>=indexer:
-                listwords=words[len(words)-indexer::]
-                checktext=' '.join(listwords)
+            temp = self.readlist[self.index]
+            indexer = len(temp.split())
+            checktext = ''
+            words = self.text.split()
+            if len(words)>= indexer :
+                listwords = words[len(words)-indexer::]
+                checktext = ' '.join(listwords)
                 print(checktext)
                 if SequenceMatcher(None, checktext.lower(), temp.lower()).ratio()>0.5:
                     print('good')
-                    a = threading.Thread(target=self.continue_narrate).start()
-                    self.writing=False
+                    a = threading.Thread(target = self.continue_narrate).start()
+                    self.writing = False
                     break
     
 if platform.system() == 'Windows' and platform.machine().endswith('64') :

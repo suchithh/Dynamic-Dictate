@@ -1,5 +1,4 @@
 from PyQt5 import QtWidgets, QtCore
-import sys
 
 stylesheet = open('style-css.txt', 'r').read()
 
@@ -26,7 +25,7 @@ class PreferencesDialog(QtWidgets.QDialog) :
     
     def __init__(self) :
         super(PreferencesDialog, self).__init__()
-        self.resize(600, 400)
+        self.setFixedSize(600, 400)
         self.setWindowTitle('Preferences')
         self.setStyleSheet(stylesheet)
 
