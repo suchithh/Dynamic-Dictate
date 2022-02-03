@@ -106,7 +106,8 @@ class MyWindow(Window) :
             _, image = self.cap.read()
             if image is not None :
                 coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-                image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
+                if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
+                    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
                 print(self.text)
                 cv2.resize(image, (self.image_label.width(), self.image_label.height()), interpolation=cv2.INTER_CUBIC)
                 self.display_image(image, True)
@@ -417,6 +418,7 @@ class MyWindow(Window) :
         listwords=words[len(words)-self.n::]
         for i in listwords:
             checktext+=i+' '
+        print(SequenceMatcher(None, checktext, temp).ratio())
         if SequenceMatcher(None, checktext, temp).ratio()>0.5:
                 self.continue_narrate()
     

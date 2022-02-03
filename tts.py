@@ -42,7 +42,6 @@ def getpages(path):
     else:
         tld='us'
     n=int(settings['Narration']['Maximum_Words_Read'])
-    delete_cache()
     with pdfplumber.open(path) as pdf:
         pages=len(pdf.pages)
         return pages #procures number of pages
