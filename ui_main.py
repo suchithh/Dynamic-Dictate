@@ -73,8 +73,8 @@ class MyWindow(Window) :
         # frame containing tab layout
         self.frame = QWebEngineView(self)
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
-        # self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
-        # self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PdfViewerEnabled, True)
+        self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
+        self.frame.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.PdfViewerEnabled, True)
 
         # text label for webcam image
         self.image_label = Widgets.QLabel(self)
@@ -270,14 +270,14 @@ class MyWindow(Window) :
         self.make_recent_menu()
 
         # a frame that shows web requests
-        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.file}'))
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.is_file_open = True
 
     # file opened from 'Open Recent...' menu
     def open_recent_file(self, index) :
         # a frame that shows web requests
-        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.rfiles[index]}'))
+        self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.rfiles[index]}'))
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.file = self.rfiles[index]
 
