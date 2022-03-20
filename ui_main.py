@@ -19,6 +19,7 @@ class MyWindow(Window) :
     d = None
     c = None
     e = None
+    f = None
     index = 0
     writing = True
     is_file_open = False
@@ -114,38 +115,58 @@ class MyWindow(Window) :
         # capture of the camera
         self.cap = None
         self.camon = self.settings['On-Startup']['Camera-on']
+        
+        # self.timer = QtCore.QTimer(self, interval = 50)
 
-        self.timer = QtCore.QTimer(self, interval = 10)
-        self.timer.timeout.connect(self.update_frame)
         self._image_counter = 0
         self.start_webcam()
+
+        # self.timer.timeout.connect(self.make_f)
+
+    # def make_f(self) :
+    #     self.f = exc.thread_with_exception(target = self.update_frame)
+    #     self.f.start()
 
     @QtCore.pyqtSlot()
     def start_webcam(self) :
         if (self.cap is None and self.camon) :
             self.cap = cv2.VideoCapture(0)
-        self.timer.start()
+        # self.timer.start()
+            self.f = exc.thread_with_exception(target = self.update_frame)
+            self.f.start()
 
     @QtCore.pyqtSlot()
     def stop_webcam(self) :
         if (self.cap is not None and not self.camon) :
             self.cap = None
+        if self.f is not None :
+            self.f.raise_exception()
+            self.f.join()
+            self.f = None
 
     @QtCore.pyqtSlot()
     def update_frame(self) :
-        if self.camon and self.cap.isOpened() :
+        counter = 0
+        while self.camon and self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
-                coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-                if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
-                    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
-                print(self.text)
-                width = self.image_label.width()
-                height = self.image_label.height()
-                image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
+                counter += 1
+                if counter == 10 :
+                    coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                    if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
+                        image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
+                    print(self.text)
+                    width = self.image_label.width()
+                    height = self.image_label.height()
+                    image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
+                    counter = 0
                 self.display_image(image, True)
         else :
             self.display_image(None, True)
+        # if self.f is not None :
+        #     self.f.raise_exception()
+        #     self.f.join()
+        #     self.f = None
 
     def display_image(self, img, window = True) :
         outImage = None
