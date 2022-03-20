@@ -4,13 +4,7 @@ from datetime import datetime
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 from pygame import mixer, time
-import keyboard
-from difflib import SequenceMatcher
-import speech_recognition as speech
-import threading
 import ui_settings
-
-
 
 pages=1 
 n=5 #setting for number of words to be read at once at max
@@ -86,16 +80,6 @@ def Audiobookparse(pageno, path):
         data = pdf.pages[pageno]
         text+=data.extract_text()+" " #parses a page in the pdf as a string
     return text
-# def imagechecker(checktext, path, pages, page, index, writing):
-#     if image_check(checktext)>0.2:
-#         writing=False
-#         repeat=False
-#         pagereader(path, pages, page, index, writing, repeat)
-
-
-# def image_check(checktext): #compares text to ocr to determine wheter the user has finished writing
-#     temp=''
-#     return SequenceMatcher(None, checktext, temp).ratio()
 
 def narrate(current_index,readlist):
     print('narrating')
