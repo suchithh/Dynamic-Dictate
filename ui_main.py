@@ -1,4 +1,5 @@
 from ctypes import alignment
+from operator import imod
 from tracemalloc import stop
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui, QtWebEngineWidgets
 from PyQt5.QtGui import QIcon
@@ -8,7 +9,8 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
 import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading, speech_recognition as speech, except_thread as exc, ui_settings
 from difflib import SequenceMatcher
-
+import asyncio
+import time
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
@@ -19,6 +21,7 @@ class MyWindow(Window) :
     d = None
     c = None
     e = None
+    f=None
     index = 0
     writing = True
     is_file_open = False
@@ -115,7 +118,7 @@ class MyWindow(Window) :
         self.cap = None
         self.camon = self.settings['On-Startup']['Camera-on']
 
-        self.timer = QtCore.QTimer(self, interval = 10)
+        self.timer = QtCore.QTimer(self, interval = 300)
         self.timer.timeout.connect(self.update_frame)
         self._image_counter = 0
         self.start_webcam()
@@ -134,19 +137,25 @@ class MyWindow(Window) :
     @QtCore.pyqtSlot()
     def update_frame(self) :
         if self.camon and self.cap.isOpened() :
-            _, image = self.cap.read()
-            if image is not None :
-                coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-                if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
-                    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
-                print(self.text)
-                width = self.image_label.width()
-                height = self.image_label.height()
-                image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
-                self.display_image(image, True)
+            _, self.image = self.cap.read()
+            if self.image is not None :
+                if self.f is None:
+                    self.f = exc.thread_with_exception(target = self.get_image_text)
+                    self.f.start()                
         else :
             self.display_image(None, True)
-
+    
+    def get_image_text(self):
+        while True:
+            self.coords_tl, self.coords_br, self.text = text_detect.detect_text(cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY))
+            if ('x' in self.coords_br and 'x' in self.coords_tl and 'y' in self.coords_br and 'y' in self.coords_tl) :
+                    self.image = cv2.rectangle(self.image,(self.coords_tl['x'],self.coords_tl['y']),(self.coords_br['x'],self.coords_br['y']),(0,0,255),2)
+                    print(self.text)
+                    width = self.image_label.width()
+                    height = self.image_label.height()
+                    self.image = cv2.resize(self.image, (width, height), interpolation = cv2.INTER_CUBIC)
+                    self.display_image(self.image, True)
+                
     def display_image(self, img, window = True) :
         outImage = None
         if self.camon :
@@ -248,6 +257,10 @@ class MyWindow(Window) :
             self.camAction.setIcon(QIcon(':ic-cam-off.svg'))
         else :
             self.stop_webcam()
+            if self.f is not None:
+                self.f.raise_exception()
+                self.f.join()
+                self.f=None
             self.camAction.setIcon(QIcon(':ic-cam-on.svg'))
 
     def open_settings(self) :
