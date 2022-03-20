@@ -64,23 +64,10 @@ QToolBar::handle {
 QToolBar::item:hover {
     background-color: #444444;
 }
-/*QSpinBox {
-    font-size: 20px;
+QToolButton {
+    background-color: #333333;
+    border: none;
 }
-QSpinBox::up-button {
-    subcontrol-origin: border;
-    subcontrol-position: right;
-    border-image: url(res/ic-up-2.svg);
-    width: 16px;
-    height: 16px;
-}
-QSpinBox::down-button {
-    subcontrol-origin: border;
-    subcontrol-position: left;
-    border-image: url(res/ic-down-2.svg);
-    width: 16px;
-    height: 16px;
-}*/
 QTabWidget::tab-bar {
     background-color: #222222;
 }

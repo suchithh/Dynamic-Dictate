@@ -25,5 +25,9 @@
     <file alias="ic-next.svg">res/ic-next.svg</file>
 
     <file alias="ic-settings.svg">res/ic-settings.svg</file>
+
+    <file alias="ic-mic-off.svg">res/ic-mic-off.svg</file>
+    <file alias="ic-mic-on.svg">res/ic-mic-on.svg</file>
+    <file alias="ic-mic-recog.svg">res/ic-mic-recog.svg</file>
 </qresource>
 </RCC>

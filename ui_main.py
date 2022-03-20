@@ -1,3 +1,4 @@
+from ctypes import alignment
 from tracemalloc import stop
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui, QtWebEngineWidgets
 from PyQt5.QtGui import QIcon
@@ -80,11 +81,41 @@ class MyWindow(Window) :
         self.image_label = Widgets.QLabel(self)
         self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
 
+        # group boxes for holding text pieces, detected and narrated
+        self.text_read_group = Widgets.QGroupBox(self, title = 'Text detected:')
+        self.text_narrated_group = Widgets.QGroupBox(self, title = 'Text narrated:')
+        self.text_read_group.setGeometry(int(0.8*self.width()), int(0.2*self.height()), int(0.2*self.width()), int(0.15*self.height()))
+        self.text_narrated_group.setGeometry(int(0.8*self.width()), int(0.4*self.height()), int(0.2*self.width()), int(0.15*self.height()))
+        self.text_read_layout = Widgets.QVBoxLayout()
+        self.text_narrated_layout = Widgets.QVBoxLayout()
+        self.text_read = Widgets.QLabel(self.text_read_group)
+        self.text_read_layout.addWidget(self.text_read)
+        self.text_narrated = Widgets.QLabel(self.text_narrated_group)
+        self.text_narrated_layout.addWidget(self.text_narrated)
+        self.text_read_group.setLayout(self.text_read_layout)
+        self.text_narrated_group.setLayout(self.text_narrated_layout)
+
+        # group box for text detected by mic and status of mic
+        self.mic_group = Widgets.QGroupBox(self, title = 'Mic input:')
+        self.mic_group.setGeometry(int(0.8*self.width()), int(0.6*self.height()), int(0.2*self.width()), int(0.15*self.height()))
+        self.mic_layout = Widgets.QVBoxLayout()
+        self.mic_detected = Widgets.QLabel(self.mic_group)
+        self.mic_status = Widgets.QHBoxLayout()
+        self.mic_status_icon = Widgets.QToolButton(icon = QIcon(':ic-mic-off.svg'))
+        self.mic_status_text = Widgets.QLabel(text = 'Mic off')
+        self.mic_status.addWidget(self.mic_status_icon)
+        self.mic_status.addWidget(self.mic_status_text)
+        self.mic_layout.addWidget(self.mic_detected)
+        self.mic_status_widget = Widgets.QWidget()
+        self.mic_status_widget.setLayout(self.mic_status)
+        self.mic_layout.addWidget(self.mic_status_widget)
+        self.mic_group.setLayout(self.mic_layout)
+
         # capture of the camera
         self.cap = None
         self.camon = self.settings['On-Startup']['Camera-on']
 
-        self.timer = QtCore.QTimer(self, interval = 500)
+        self.timer = QtCore.QTimer(self, interval = 10)
         self.timer.timeout.connect(self.update_frame)
         self._image_counter = 0
         self.start_webcam()
@@ -247,6 +278,9 @@ class MyWindow(Window) :
     def resize(self) :
         self.frame.setGeometry(0, int(0.1*self.height()), int(0.8*self.width()), int(0.9*self.height()))
         self.image_label.setGeometry(int(0.8*self.width()), int(0.8*self.height()), int(0.2*self.width()), int(0.2*self.height()))
+        self.text_read_group.setGeometry(int(0.8*self.width()), int(0.2*self.height()), int(0.2*self.width()), int(0.15*self.height()))
+        self.text_narrated_group.setGeometry(int(0.8*self.width()), int(0.4*self.height()), int(0.2*self.width()), int(0.15*self.height()))
+        self.mic_group.setGeometry(int(0.8*self.width()), int(0.6*self.height()), int(0.2*self.width()), int(0.15*self.height()))
 
     # open action triggered
     def open_file(self) :
@@ -294,7 +328,7 @@ class MyWindow(Window) :
             return
         if self.index >=  len(self.readlist) :
             self.page += 1
-            self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file = {self.file}#page = {(self.page+1)}'))
+            self.frame.load(QUrl.fromUserInput(f'{self.path_pdfjs}?file={self.file}#page={(self.page+1)}'))
             self.index = 0
             self.readlist = tts.textparse(tts.pdfparse(self.page, self.file))
         self.writing = True
@@ -308,13 +342,14 @@ class MyWindow(Window) :
 
     def start_tts(self) :
         tts.narrate(self.index, self.readlist)
+        self.text_narrated.setText(self.readlist[self.index])
+        # self.readlist[self.index] is the string being read out
         if self.d is not None :
                 self.d.raise_exception()
                 self.d.join()
     
     def buttonpress(self) :      
         self.writing = True
-        print('k pressed')
         if self.is_file_open :
             self.is_started = True
             self.pages = tts.getpages(self.file)
@@ -333,7 +368,6 @@ class MyWindow(Window) :
             if self.e is not None:
                 self.e.raise_exception()
                 self.e.join()
-        print('d pressed')
         if self.is_file_open :
             if self.is_started :
                 self.index += 1
@@ -351,32 +385,35 @@ class MyWindow(Window) :
             if self.e is not None:
                 self.e.raise_exception()
                 self.e.join()
-        print('a pressed')
         if self.is_file_open :
             if self.is_started :
                 self.start_narrate(self.file)
     
     def voicecheck(self) :
         while self.writing:
-            print('started')
             r = speech.Recognizer()    
-            with speech.Microphone() as source :            
-                print("Listening...")
+            with speech.Microphone() as source :
+                self.mic_status_icon.setIcon(QIcon(':ic-mic-on.svg'))
+                self.mic_status_text.setText('Listening')
+                if not any(x in self.mic_detected.text() for x in ['next', 'continue', 'yes', 'yeah', 'yah', 'previous', 'back', 'no', 'repeat']) :
+                    self.mic_detected.setText('')
                 r.pause_threshold = 1
                 audio = r.listen(source)        
-            try:
-                print("Recognizing...")   
+            try : 
+                self.mic_status_icon.setIcon(QIcon(':ic-mic-recog.svg'))
+                self.mic_status_text.setText('Recognizing')
                 text = r.recognize_google(audio, language = 'en-in')
-                print(text)       
+                print(text)
+                self.mic_detected.setText(text)   
             except Exception as e :
                 text = 'bruh'
                 print(e)   
-                print("Unable to Recognize your voice.") 
+                self.mic_detected.setText('Unable to recognize.')
             if any(x in text for x in ['next', 'continue', 'yes', 'yeah', 'yah']) :      
                 a = threading.Thread(target = self.continue_narrate).start()
                 self.writing = False
                 break
-            elif any(x in text for x in ['previous', 'back', 'no']) :
+            elif any(x in text for x in ['previous', 'back', 'no', 'repeat']) :
                 a = threading.Thread(target = self.repeat_narrate).start()
                 self.writing = False
                 break
@@ -418,13 +455,14 @@ class MyWindow(Window) :
             temp = self.readlist[self.index]
             indexer = len(temp.split())
             checktext = ''
+            # checktext is the string detected by Google
             words = self.text.split()
             if len(words)>= indexer :
                 listwords = words[len(words)-indexer::]
                 checktext = ' '.join(listwords)
-                print(checktext)
                 if SequenceMatcher(None, checktext.lower(), temp.lower()).ratio()>0.5:
-                    print('good')
+                    print(checktext)
+                    self.text_read.setText(checktext)
                     a = threading.Thread(target = self.continue_narrate).start()
                     self.writing = False
                     break

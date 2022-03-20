@@ -1,10 +1,15 @@
 from turtle import title
 from PyQt5 import QtWidgets, QtCore, QtGui
 import cv2, sys
-
+from pynput.keyboard import Key, Controller
+import time, platform, os
+import text_detect
 stylesheet = open('style-css.txt', 'r').read()
 
 class PreferencesDialog(QtWidgets.QDialog) :
+
+    prevtext=''
+    text=''
 
     def __init__(self) :
         super(PreferencesDialog, self).__init__()
@@ -30,7 +35,7 @@ class PreferencesDialog(QtWidgets.QDialog) :
         self.horizontal_layout_2.addWidget(self.stop_button, alignment=QtCore.Qt.AlignVCenter)
         self.stop_button.clicked.connect(self.stop_webcam)
 
-        self.timer = QtCore.QTimer(self, interval = 500)
+        self.timer = QtCore.QTimer(self, interval = 50)
         self.timer.timeout.connect(self.update_frame)
         self.start_webcam()
 
@@ -52,6 +57,11 @@ class PreferencesDialog(QtWidgets.QDialog) :
         if self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
+                coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
+                    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
+                print(self.text)
+                self.keyboard_type()
                 width = self.image_label.width()
                 height = self.image_label.height()
                 image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
@@ -72,6 +82,26 @@ class PreferencesDialog(QtWidgets.QDialog) :
         outImage = outImage.rgbSwapped()
         if window :
             self.image_label.setPixmap(QtGui.QPixmap.fromImage(outImage))
+    
+    def keyboard_type(self):
+        keyboard=Controller()
+        if not len(self.text) < 2:
+            for i in self.prevtext:
+                keyboard.press(Key.backspace)
+                keyboard.release(Key.backspace)
+            for i in self.text:              
+                keyboard.press(i)
+            self.prevtext=self.text
+
+if platform.system() == 'Windows' and platform.machine().endswith('64') :
+    text_detect.set_tess_path(r'bin\tesseract-ocr-win64\tesseract.exe')
+else :
+    text_detect.set_tess_path('tesseract')
+try:
+    os.mkdir('temp')
+except FileExistsError:
+    pass
+text_detect.get_key()
 
 # initializing app with system arguments
 app = QtWidgets.QApplication(sys.argv)
