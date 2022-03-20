@@ -117,23 +117,13 @@ class MyWindow(Window) :
         # capture of the camera
         self.cap = None
         self.camon = self.settings['On-Startup']['Camera-on']
-        
-        # self.timer = QtCore.QTimer(self, interval = 50)
-
         self._image_counter = 0
         self.start_webcam()
-
-        # self.timer.timeout.connect(self.make_f)
-
-    # def make_f(self) :
-    #     self.f = exc.thread_with_exception(target = self.update_frame)
-    #     self.f.start()
 
     @QtCore.pyqtSlot()
     def start_webcam(self) :
         if (self.cap is None and self.camon) :
             self.cap = cv2.VideoCapture(0)
-        # self.timer.start()
             self.f = exc.thread_with_exception(target = self.update_frame)
             self.f.start()
 
@@ -167,10 +157,6 @@ class MyWindow(Window) :
                 self.display_image(image, True)
         else :
             self.display_image(None, True)
-        # if self.f is not None :
-        #     self.f.raise_exception()
-        #     self.f.join()
-        #     self.f = None
 
     def display_image(self, img, window = True) :
         outImage = None

@@ -54,14 +54,19 @@ class PreferencesDialog(QtWidgets.QDialog) :
 
     @QtCore.pyqtSlot()
     def update_frame(self) :
-        if self.cap.isOpened() :
+        counter = 0
+        coords_tl, coords_br, self.text = None, None, None
+        while self.camon and self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
-                coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
-                if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
-                    image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
-                print(self.text)
-                self.keyboard_type()
+                counter += 1
+                if counter == 10 :
+                    coords_tl, coords_br, self.text = text_detect.detect_text(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                    print(self.text)
+                    counter = 0
+                if coords_br and coords_tl :
+                    if ('x' in coords_br and 'x' in coords_tl and 'y' in coords_br and 'y' in coords_tl) :
+                        image = cv2.rectangle(image,(coords_tl['x'],coords_tl['y']),(coords_br['x'],coords_br['y']),(0,0,255),2)
                 width = self.image_label.width()
                 height = self.image_label.height()
                 image = cv2.resize(image, (width, height), interpolation = cv2.INTER_CUBIC)
