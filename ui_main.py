@@ -1,4 +1,5 @@
 from ctypes import alignment
+from operator import imod
 from tracemalloc import stop
 from PyQt5 import QtWidgets as Widgets, QtCore, QtGui, QtWebEngineWidgets
 from PyQt5.QtGui import QIcon
@@ -8,7 +9,8 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage
 from PyQt5.QtWidgets import QApplication as App, QMainWindow as Window, QFileDialog
 import sys, os, qrc_res, zipfile, cv2, text_detect, platform, tts, threading, speech_recognition as speech, except_thread as exc, ui_settings
 from difflib import SequenceMatcher
-
+import asyncio
+import time
 # Qt widgets can be styled in CSS, so this string will work as the parent style sheet for the app
 stylesheet = open('style-css.txt', 'r').read()
 
@@ -269,6 +271,10 @@ class MyWindow(Window) :
             self.camAction.setIcon(QIcon(':ic-cam-off.svg'))
         else :
             self.stop_webcam()
+            if self.f is not None:
+                self.f.raise_exception()
+                self.f.join()
+                self.f=None
             self.camAction.setIcon(QIcon(':ic-cam-on.svg'))
 
     def open_settings(self) :
