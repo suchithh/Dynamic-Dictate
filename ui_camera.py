@@ -3,13 +3,14 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import cv2, sys
 from pynput.keyboard import Key, Controller
 import time, platform, os
-import text_detect
+import text_detect, except_thread as exc
 stylesheet = open('style-css.txt', 'r').read()
 
 class PreferencesDialog(QtWidgets.QDialog) :
 
     prevtext=''
     text=''
+    f = None
 
     def __init__(self) :
         super(PreferencesDialog, self).__init__()
@@ -34,29 +35,30 @@ class PreferencesDialog(QtWidgets.QDialog) :
         self.stop_button.setFixedSize(int(0.2*self.width()), int(0.05*self.height()))
         self.horizontal_layout_2.addWidget(self.stop_button, alignment=QtCore.Qt.AlignVCenter)
         self.stop_button.clicked.connect(self.stop_webcam)
-
-        self.timer = QtCore.QTimer(self, interval = 50)
-        self.timer.timeout.connect(self.update_frame)
         self.start_webcam()
 
     @QtCore.pyqtSlot()
     def start_webcam(self) :
         if (self.cap is None) :
             self.cap = cv2.VideoCapture(0)
-        self.timer.start()
+        self.f = exc.thread_with_exception(target = self.update_frame)
+        self.f.start()
 
     @QtCore.pyqtSlot()
     def stop_webcam(self) :
         if (self.cap is not None) :
             self.cap = None
+        if self.f is not None :
+            self.f.raise_exception()
+            self.f.join()
+            self.f = None
         self.close()
-        self.timer.stop()
 
     @QtCore.pyqtSlot()
     def update_frame(self) :
         counter = 0
         coords_tl, coords_br, self.text = None, None, None
-        while self.camon and self.cap.isOpened() :
+        while self.cap.isOpened() :
             _, image = self.cap.read()
             if image is not None :
                 counter += 1
